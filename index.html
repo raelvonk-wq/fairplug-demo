@@ -277,9 +277,7 @@ body{background:#e0e3e8;display:flex;justify-content:center;min-height:100vh;}
 
 /* ═══ DEMO: 3D LAADPAS (SmartPass) ═══ */
 .pas3d-wrap{perspective:1000px;margin-bottom:12px;}
-.pas3d-float{animation:pasfloat 7s ease-in-out infinite;transform-style:preserve-3d;}
-@keyframes pasfloat{0%,100%{transform:rotateX(5deg) rotateY(-6deg)}50%{transform:rotateX(-3deg) rotateY(6deg)}}
-@media (prefers-reduced-motion: reduce){.pas3d-float{animation:none;}}
+.pas3d-float{transform-style:preserve-3d;}
 .pas3d-flip{position:relative;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,.7,.3,1);aspect-ratio:1.586;cursor:pointer;}
 .pas3d-flip.flipped{transform:rotateY(180deg);}
 .pas3d-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:#fff;border-radius:16px;box-shadow:0 20px 34px -14px rgba(10,22,32,.32),0 6px 14px rgba(10,22,32,.12);overflow:hidden;display:flex;flex-direction:column;padding:18px 20px 16px 30px;}
