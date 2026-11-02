@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>FairPlug Demo</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="FairPlug Demo">
+<link rel="apple-touch-icon" href="icons/icon-180-v3.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192-v3.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<style>
+:root{--f:'DM Sans',system-ui,sans-serif;--ink:#0d0f12;--ink2:#3d4350;--ink3:#8590a2;--line:#e9ecf0;--line2:#f2f4f7;--surface:#fff;--bg:#f3f5f8;--bg2:#edf0f4;--acc:#1db87e;--acc-dk:#17a370;--acc-bg:#edfaf4;--amber:#e8a020;--amber-bg:#fef8ec;--red:#e03535;--red-bg:#fef1f1;--blue:#2a7ef8;--blue-bg:#eef4ff;--purple:#7c3aed;--purple-bg:#f3f0ff;--nav:54px;--hdr:48px;--r:10px;--rl:14px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:var(--f);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;}
+body{background:#e0e3e8;display:flex;justify-content:center;min-height:100vh;}
+#phone{width:430px;max-width:100vw;height:100dvh;background:var(--bg);display:flex;flex-direction:column;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 24px 64px rgba(0,0,0,.18);overflow:hidden;position:relative;}
+@media(max-width:430px){body{background:var(--bg);}#phone{box-shadow:none;}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* HEADER */
+#hdr{height:var(--hdr);flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 16px;justify-content:space-between;z-index:50;}
+.hdr-brand{font-size:1.22rem;font-weight:800;letter-spacing:-.03em;color:var(--ink);}.hdr-brand i{color:var(--acc);font-style:normal;}
+.hdr-r{display:flex;align-items:center;gap:8px;}
+.live-tag{display:flex;align-items:center;gap:4px;font-size:.59rem;font-weight:600;color:var(--acc);letter-spacing:.06em;text-transform:uppercase;background:var(--acc-bg);padding:3px 8px;border-radius:99px;border:1px solid rgba(29,184,126,.2);}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--acc);animation:pulse 2s ease-in-out infinite;}
+.circ{width:36px;height:36px;border-radius:50%;background:var(--bg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}.circ svg{width:16px;height:16px;color:var(--ink);}
+
+/* NAV */
+#nav{height:calc(var(--nav) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);flex-shrink:0;background:var(--surface);border-top:1px solid var(--line);display:flex;z-index:100;}
+.ntab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--ink3);cursor:pointer;padding-bottom:3px;font-family:var(--f);position:relative;transition:color .16s;}
+.ntab.active{color:var(--acc);}.ntab.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:var(--acc);border-radius:0 0 3px 3px;}
+.ntab svg{width:19px;height:19px;stroke-width:1.7;}.ntab-lbl{font-size:.57rem;font-weight:600;letter-spacing:.02em;}
+
+/* PAGES */
+.page{display:none;flex:1;min-height:0;overflow:hidden;flex-direction:column;}
+.page.active{display:flex;}
+
+/* SHARED */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:99px;font-size:.59rem;font-weight:600;line-height:1.4;}
+.bg{background:var(--acc-bg);color:var(--acc);}.ba{background:var(--amber-bg);color:var(--amber);}.br{background:var(--red-bg);color:var(--red);}.bb{background:var(--blue-bg);color:var(--blue);}.bgr{background:var(--bg2);color:var(--ink3);}
+.divider{height:1px;background:var(--line);margin:12px 0;}
+.sec-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;margin-top:6px;}
+.sec-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);}
+.sec-tag{font-size:.6rem;color:var(--ink3);}
+
+/* OVERLAY, SHEET, MENU, TOAST */
+#ovl{position:absolute;inset:0;background:rgba(13,15,18,.4);z-index:190;opacity:0;pointer-events:none;transition:opacity .26s;}#ovl.v{opacity:1;pointer-events:all;}
+#sheet{position:absolute;bottom:0;left:0;right:0;z-index:200;background:var(--surface);border-radius:18px 18px 0 0;border-top:1px solid var(--line);transform:translateY(100%);transition:transform .32s cubic-bezier(.22,.68,0,1.08);max-height:88%;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.1);}
+#sheet.open{transform:translateY(0);}
+#shd{width:32px;height:3px;background:var(--line);border-radius:2px;margin:10px auto 0;}#sbc{padding:14px 16px 72px;}
+#menu{position:absolute;top:0;right:0;bottom:0;width:280px;z-index:810;background:var(--surface);transform:translateX(100%);transition:transform .3s cubic-bezier(.22,.68,0,1.05);box-shadow:-4px 0 24px rgba(0,0,0,.08);overflow-y:auto;padding:20px 18px 40px;}
+#menu.open{transform:translateX(0);}
+.m-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line2);cursor:pointer;}.m-item:last-child{border-bottom:none;}
+.m-ic{width:32px;height:32px;border-radius:8px;background:#fef1f1;display:flex;align-items:center;justify-content:center;flex-shrink:0;}.m-ic svg{width:15px;height:15px;}
+.m-txt{flex:1;}.m-txt strong{font-size:.82rem;font-weight:600;color:var(--ink);display:block;}.m-txt small{font-size:.64rem;color:var(--ink3);}
+#toast{position:absolute;bottom:calc(var(--nav)+12px);left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:#fff;padding:8px 16px;border-radius:99px;font-size:.72rem;font-weight:500;pointer-events:none;opacity:0;z-index:999;white-space:nowrap;transition:opacity .2s,transform .2s;}#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* LOCATION MODAL */
+#loc-modal{position:absolute;inset:0;z-index:1000;background:rgba(13,15,18,.5);backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center;}
+#loc-modal.show{display:flex;}
+.loc-sheet{width:100%;background:var(--surface);border-radius:20px 20px 0 0;display:flex;flex-direction:column;max-height:82vh;overflow:hidden;}
+.loc-sheet-head{padding:8px 16px 0;flex-shrink:0;}
+.loc-handle{width:32px;height:3px;background:var(--line);border-radius:2px;margin:0 auto 14px;}
+.loc-title{font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:2px;}
+.loc-sub{font-size:.72rem;color:var(--ink3);margin-bottom:12px;}
+.loc-search{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:0 11px;transition:border-color .16s;}
+.loc-search:focus-within{border-color:var(--acc);}
+.loc-search svg{color:var(--ink3);width:14px;height:14px;flex-shrink:0;}
+#loc-inp{flex:1;background:none;border:none;padding:10px 0;font-family:var(--f);font-size:.86rem;color:var(--ink);outline:none;}
+.loc-scroll{flex:1;overflow-y:auto;padding:4px 16px 0;}
+.loc-group-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);padding:14px 0 6px;}
+.loc-opt{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line2);cursor:pointer;}
+.loc-opt:hover .loc-opt-name{color:var(--acc);}
+.loc-opt.selected .loc-opt-name{color:var(--acc);font-weight:700;}
+.loc-opt-name{font-size:.88rem;font-weight:600;color:var(--ink);}
+.loc-opt-sub{font-size:.67rem;color:var(--ink3);}
+.loc-check{width:20px;height:20px;border-radius:99px;background:var(--acc);display:none;align-items:center;justify-content:center;flex-shrink:0;}
+.loc-opt.selected .loc-check{display:flex;}
+.loc-sheet-foot{flex-shrink:0;padding:12px 16px 24px;border-top:1px solid var(--line);background:var(--surface);}
+.btn-primary{width:100%;padding:13px;border-radius:12px;border:none;background:var(--acc);color:#fff;font-family:var(--f);font-size:.94rem;font-weight:700;cursor:pointer;}
+
+/* SHEET CONTENT */
+.sh-name-dk{font-size:1.05rem;font-weight:700;color:var(--ink);letter-spacing:-.02em;margin-bottom:2px;}
+.sh-city{font-size:.71rem;color:var(--ink3);margin-bottom:10px;}
+.sh-banner{background:var(--red-bg);border:1px solid rgba(224,53,53,.2);border-radius:var(--r);padding:10px 12px;margin-bottom:14px;display:flex;align-items:flex-start;gap:9px;}
+.sh-banner svg{flex-shrink:0;width:15px;height:15px;color:var(--red);margin-top:1px;}
+.sh-banner-txt{font-size:.72rem;color:var(--red);line-height:1.55;}.sh-banner-txt strong{font-weight:700;}
+.start-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--r);border:none;background:var(--acc);color:#fff;font-family:var(--f);font-size:.88rem;font-weight:600;cursor:pointer;text-decoration:none;}.start-btn:hover{background:var(--acc-dk);}.start-btn svg{width:15px;height:15px;}
+.pr{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0;margin-bottom:8px;overflow:hidden;}.pr:hover{border-color:rgba(29,184,126,.3);}.pr.pr-best{border-color:var(--acc);}
+.pr-main{display:flex;align-items:center;gap:10px;padding:12px 13px;}
+.pr-rk{width:24px;height:24px;border-radius:6px;font-size:.67rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--bg2);color:var(--ink3);border:1px solid var(--line);}.pr-rk.r1{background:var(--acc);color:#fff;border-color:transparent;}.pr-rk.r-mid{background:var(--amber-bg);color:var(--amber);border-color:rgba(232,160,32,.2);}.pr-rk.r-exp{background:var(--red-bg);color:var(--red);border-color:rgba(224,53,53,.2);}
+.pr-info{flex:1;min-width:0;}.pr-nm{font-size:.86rem;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;}
+.pr-cheap-tag{font-size:.56rem;font-weight:700;color:var(--acc);background:var(--acc-bg);padding:1px 6px;border-radius:4px;text-transform:uppercase;}
+.pr-my-tag{font-size:.52rem;font-weight:600;color:var(--blue);background:var(--blue-bg);padding:1px 5px;border-radius:3px;}
+.pr-df{font-size:.66rem;color:var(--ink3);margin-top:1px;}.pr-df.ch{color:var(--acc);font-weight:600;}
+.pr-price-col{text-align:right;flex-shrink:0;}.pr-price{font-size:1.05rem;font-weight:800;color:var(--ink);letter-spacing:-.03em;line-height:1;}.pr-pu{font-size:.56rem;color:var(--ink3);display:block;margin-top:2px;}
+.ref-btn{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border-top:1px solid var(--line2);background:var(--bg);color:var(--ink2);font-family:var(--f);font-size:.73rem;font-weight:500;cursor:pointer;text-decoration:none;}.pr.pr-best .ref-btn{background:var(--acc-bg);color:var(--acc);}.ref-btn:hover{background:var(--acc);color:#fff;}
+
+/* ═══ DASHBOARD ═══ */
+.bar{background:var(--surface);border-bottom:1px solid var(--line);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.bar-l{display:flex;align-items:center;gap:8px;}
+.bar-ic{width:26px;height:26px;border-radius:8px;background:#fef1f1;display:flex;align-items:center;justify-content:center;flex-shrink:0;}.bar-ic svg{width:13px;height:13px;}
+.bar-name{font-size:.82rem;font-weight:700;color:var(--ink);}.bar-sub{font-size:.63rem;color:var(--ink3);margin-top:1px;}
+.bar-btn{font-size:.68rem;font-weight:600;color:var(--acc);background:var(--acc-bg);border:1px solid rgba(29,184,126,.2);padding:5px 10px;border-radius:7px;cursor:pointer;font-family:var(--f);white-space:nowrap;}
+.eng-bar{padding:5px 14px;}.eng-l{display:flex;align-items:center;gap:7px;}.eng-dot{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:pulse 2s ease-in-out infinite;}.eng-txt{font-size:.61rem;color:var(--ink3);}.eng-txt strong{color:var(--ink2);font-weight:600;}.eng-pill{font-size:.57rem;font-weight:600;color:var(--acc);background:var(--acc-bg);border:1px solid rgba(29,184,126,.18);padding:2px 8px;border-radius:5px;}
+.pad{padding:10px 12px;flex:1;overflow-y:auto;background:var(--bg);}
+.sc-hero{background:var(--acc);border-radius:18px;overflow:hidden;margin-bottom:8px;cursor:pointer;transition:transform .13s;}.sc-hero:active{transform:scale(.983);}
+.sc-hero.dark{background:var(--blue);}
+.sc-hero-body{padding:18px;}
+.sh-top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sh-badge{font-size:.58rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#fff;background:rgba(255,255,255,.2);padding:3px 9px;border-radius:4px;}
+.sh-status{display:flex;align-items:center;gap:5px;font-size:.64rem;color:rgba(255,255,255,.7);}
+.sh-dot{width:6px;height:6px;border-radius:50%;}.sh-dot.v{background:#fff;}.sh-dot.b{background:var(--amber);}.sh-dot.s{background:var(--red);}
+.sh-name{font-size:1.1rem;font-weight:800;color:#fff!important;letter-spacing:-.03em;line-height:1.2;margin-bottom:2px;}
+.sh-loc{font-size:.67rem;color:rgba(255,255,255,.65);margin-bottom:18px;}
+.sh-price-block{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px;}
+.sh-price-label{font-size:.59rem;color:rgba(255,255,255,.6);margin-bottom:4px;letter-spacing:.04em;text-transform:uppercase;}
+.sh-price-val{font-size:2.55rem;font-weight:800;color:#fff;letter-spacing:-.06em;line-height:1;}
+.sh-price-unit{font-size:.68rem;color:rgba(255,255,255,.6);margin-left:3px;}
+.sh-kw-tag{font-size:.65rem;font-weight:600;color:rgba(255,255,255,.75);background:rgba(255,255,255,.18);padding:5px 10px;border-radius:8px;align-self:flex-end;}
+.sh-pass-tag{font-size:.58rem;font-weight:600;color:#fff;background:rgba(255,255,255,.22);padding:3px 8px;border-radius:4px;margin-top:10px;display:inline-block;}
+.sh-prov-strip{padding-top:12px;border-top:1px solid rgba(255,255,255,.2);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.sh-prov-name{font-size:.6rem;color:rgba(255,255,255,.55);}.sh-prov-sep{font-size:.6rem;color:rgba(255,255,255,.25);}
+.sc-list{background:#fff;border-radius:14px;padding:0 14px;margin-bottom:5px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;}.sc-list:active{transform:scale(.986);}
+.sc-row{display:flex;align-items:center;gap:12px;padding:12px 0;}
+.sc-n{font-size:.65rem;font-weight:700;color:var(--ink3);width:16px;text-align:center;flex-shrink:0;}
+.sc-mid{flex:1;min-width:0;}.sc-title{font-size:.87rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sc-info{display:flex;align-items:center;gap:5px;margin-top:2px;font-size:.62rem;color:var(--ink3);}
+.sc-sep{color:var(--line2);}.sc-v{color:var(--acc);font-weight:600;}.sc-b{color:var(--amber);font-weight:600;}.sc-s{color:var(--red);font-weight:600;}
+.sc-p{text-align:right;flex-shrink:0;}.sc-price{font-size:.98rem;font-weight:700;color:var(--ink);letter-spacing:-.03em;line-height:1;}.sc-per{font-size:.56rem;color:var(--ink3);display:block;margin-top:2px;}
+.sc-pass{font-size:.52rem;color:var(--acc);font-weight:600;display:block;margin-top:2px;}
+
+/* ═══ KAART ═══ */
+.leaflet-container{background:#a8c68f!important;font-family:var(--f)!important;}
+.leaflet-tile-pane{filter:saturate(1.5) brightness(1.02);}.leaflet-control-zoom{display:none!important;}
+.leaflet-control-attribution{font-size:.45rem!important;opacity:.5!important;}
+.marker-cluster,.marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{background:transparent!important;border:0!important;box-shadow:none!important;}
+#map-wrap{flex:1;position:relative;overflow:hidden;}
+#map{position:absolute;inset:0;z-index:1;}
+#top-bar{position:absolute;top:10px;left:10px;right:10px;z-index:10;display:flex;justify-content:space-between;align-items:center;pointer-events:none;}
+#top-bar>*{pointer-events:all;}
+.fpill{display:flex;background:var(--surface);border-radius:99px;padding:2px;box-shadow:0 2px 10px rgba(0,0,0,.1);}.fpill button{padding:6px 14px;border:none;border-radius:99px;background:none;font-family:var(--f);font-size:.7rem;font-weight:600;color:var(--ink3);cursor:pointer;}.fpill button.on{background:var(--acc);color:#fff;}
+#banner{position:absolute;top:52px;left:10px;right:10px;z-index:10;background:var(--amber-bg);border:1px solid rgba(232,160,32,.2);border-radius:var(--r);padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:.68rem;color:var(--amber);font-weight:500;cursor:pointer;transition:opacity .2s;}#banner.hidden{display:none;}#banner svg{width:14px;height:14px;flex-shrink:0;color:var(--amber);}
+#fabLoc{position:absolute;bottom:130px;right:12px;z-index:10;width:42px;height:42px;border-radius:50%;background:var(--surface);border:none;box-shadow:0 2px 10px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;}#fabLoc svg{width:18px;height:18px;color:var(--acc);}
+#bottom{position:absolute;bottom:0;left:0;right:0;z-index:10;background:var(--surface);border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.08);padding:6px 12px 10px;}
+#bhandle{width:28px;height:3px;background:var(--line);border-radius:2px;margin:0 auto 8px;}
+#brow{display:flex;gap:8px;align-items:center;}
+.bsearch{flex:1;display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:0 10px;height:38px;}.bsearch:focus-within{border-color:var(--acc);}.bsearch svg{width:14px;height:14px;color:var(--ink3);flex-shrink:0;}
+.bsearch input{flex:1;background:none;border:none;font-family:var(--f);font-size:.78rem;color:var(--ink);outline:none;}
+.bbtn{width:38px;height:38px;border-radius:10px;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}.bbtn svg{width:16px;height:16px;color:var(--ink3);}
+#sres{display:none;padding:4px 0;max-height:200px;overflow-y:auto;border-top:1px solid var(--line2);margin-top:6px;}#sres.show{display:block;}
+.sr{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line2);cursor:pointer;}.sr:hover{background:var(--bg);border-radius:8px;}
+.sr-i{width:28px;height:28px;border-radius:8px;background:var(--acc-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;}.sr-i svg{width:13px;height:13px;color:var(--acc);}
+.sr-t{font-size:.82rem;font-weight:600;color:var(--ink);}.sr-s{font-size:.6rem;color:var(--ink3);}
+.leaflet-popup-content-wrapper{background:var(--surface)!important;border-radius:var(--rl)!important;box-shadow:0 8px 32px rgba(0,0,0,.12)!important;padding:0!important;border:none!important;}
+.leaflet-popup-content{margin:0!important;width:auto!important;}.leaflet-popup-tip{background:var(--surface)!important;}
+.pp{padding:14px 15px;min-width:200px;}.pp-tag{font-size:.5rem;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}.pp-name{font-size:.92rem;font-weight:700;color:var(--ink);margin-bottom:1px;}.pp-city{font-size:.66rem;color:var(--ink3);margin-bottom:8px;}.pp-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}.pp-price{font-size:1.15rem;font-weight:800;color:var(--ink);}.pp-unit{font-size:.6rem;color:var(--ink3);font-weight:400;}.pp-btn{width:100%;padding:9px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-family:var(--f);font-size:.76rem;font-weight:600;cursor:pointer;}
+#fpanel{position:absolute;top:0;right:0;bottom:0;width:300px;z-index:810;background:var(--surface);transform:translateX(100%);transition:transform .3s cubic-bezier(.22,.68,0,1.05);box-shadow:-4px 0 24px rgba(0,0,0,.08);overflow-y:auto;padding:20px 18px 40px;}
+#fpanel.open{transform:translateX(0);}
+.fp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}.fp-h h3{font-size:1rem;font-weight:700;color:var(--ink);}
+.m-close{width:32px;height:32px;border-radius:8px;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}.m-close svg{width:16px;height:16px;color:var(--ink3);}
+.fp-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);margin:14px 0 6px;}
+.fp-opts{display:flex;flex-wrap:wrap;gap:5px;}.fp-opt{padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-family:var(--f);font-size:.68rem;font-weight:500;color:var(--ink2);cursor:pointer;}.fp-opt.on{background:var(--acc);color:#fff;border-color:var(--acc);}
+.tog-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line2);}.tog-label{font-size:.78rem;font-weight:600;color:var(--ink);}.tog-desc{font-size:.6rem;color:var(--ink3);margin-top:1px;}
+.tog{width:46px;height:26px;border-radius:99px;background:#cfd4db;border:2px solid #bcc2ca;cursor:pointer;position:relative;transition:all .2s;flex-shrink:0;}.tog.on{background:var(--acc);border-color:var(--acc);}.tog::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:transform .2s;}.tog.on::after{transform:translateX(20px);}
+.fp-apply{width:100%;padding:12px;border-radius:var(--r);border:none;background:var(--acc);color:#fff;font-family:var(--f);font-size:.84rem;font-weight:700;cursor:pointer;margin-top:18px;}
+
+/* ═══ OVER ONS ═══ */
+.hero{background:linear-gradient(155deg,#1db87e 0%,#128a5e 60%,#0e7a50 100%);padding:30px 20px 26px;position:relative;overflow:hidden;}.hero::before{content:'';position:absolute;top:-50px;right:-50px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.05);}.hero::after{content:'';position:absolute;bottom:-40px;left:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.04);}
+.hero-pill{display:inline-flex;align-items:center;gap:5px;font-size:.56rem;font-weight:700;color:#fff;background:rgba(255,255,255,.16);padding:4px 10px;border-radius:99px;margin-bottom:14px;letter-spacing:.05em;text-transform:uppercase;}.hero-pill svg{width:10px;height:10px;}
+.hero h1{font-size:1.45rem;font-weight:800;color:#fff;letter-spacing:-.04em;line-height:1.15;margin-bottom:8px;}
+.hero p{font-size:.78rem;color:rgba(255,255,255,.75);line-height:1.6;margin-bottom:18px;}
+.hero-btns{display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:1;}.hbtn{padding:10px 18px;border-radius:99px;font-family:var(--f);font-size:.76rem;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;}.hbtn svg{width:14px;height:14px;}.hbtn-w{background:#fff;color:var(--acc);}.hbtn-g{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.2);}
+.card{background:var(--surface);border-radius:var(--rl);padding:14px;margin-bottom:5px;box-shadow:0 1px 4px rgba(0,0,0,.05);}.card h3{font-size:.9rem;font-weight:700;color:var(--ink);margin-bottom:5px;}.card p{font-size:.72rem;color:var(--ink3);line-height:1.6;margin-bottom:6px;}.card p:last-child{margin-bottom:0;}
+.scan{background:var(--surface);border-radius:var(--rl);margin-bottom:5px;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;}.scan-top{display:flex;align-items:center;gap:14px;padding:14px;}.scan-ic{width:46px;height:46px;border-radius:12px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}.scan-ic svg{width:22px;height:22px;color:#fff;}.scan-txt h4{font-size:.84rem;font-weight:700;color:var(--ink);margin-bottom:2px;}.scan-txt p{font-size:.66rem;color:var(--ink3);line-height:1.45;}.scan-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-top:1px solid var(--line2);background:var(--blue-bg);color:var(--blue);font-family:var(--f);font-size:.76rem;font-weight:700;cursor:pointer;border:none;width:100%;}.scan-btn:hover{background:var(--blue);color:#fff;}.scan-btn svg{width:15px;height:15px;}
+.step{background:var(--surface);border-radius:var(--rl);margin-bottom:5px;box-shadow:0 1px 4px rgba(0,0,0,.05);display:flex;align-items:center;gap:12px;padding:12px 14px;}.step-n{width:26px;height:26px;border-radius:7px;background:var(--acc);color:#fff;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}.step h4{font-size:.82rem;font-weight:600;color:var(--ink);}.step p{font-size:.62rem;color:var(--ink3);}
+.calc-card{background:var(--surface);border-radius:var(--rl);margin-bottom:5px;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;}.calc-inner{padding:14px;}.calc-row{margin-bottom:10px;}.calc-lbl{font-size:.68rem;font-weight:600;color:var(--ink2);margin-bottom:4px;display:flex;justify-content:space-between;}.calc-lbl span{color:var(--acc);font-weight:700;}
+.calc-slider{width:100%;-webkit-appearance:none;height:5px;border-radius:3px;background:var(--line);outline:none;}.calc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--acc);border:3px solid #fff;box-shadow:0 1px 5px rgba(29,184,126,.3);cursor:pointer;}
+.calc-res{display:flex;border-top:1px solid var(--line2);}.calc-res-item{flex:1;padding:13px 8px;text-align:center;border-right:1px solid var(--line2);}.calc-res-item:last-child{border-right:none;}.calc-res-v{font-size:1.05rem;font-weight:800;color:var(--ink);letter-spacing:-.02em;}.calc-res-l{font-size:.52rem;color:var(--ink3);margin-top:2px;}
+.provs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;}.prov{background:var(--surface);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05);}.prov-n{font-size:.68rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.prov-t{font-size:.5rem;color:var(--ink3);margin-top:1px;}
+#provs-extra{display:none;}#provs-extra.show{display:contents;}.provs-more{grid-column:1/-1;padding:10px;text-align:center;font-size:.72rem;font-weight:600;color:var(--acc);cursor:pointer;background:var(--surface);border-radius:var(--r);box-shadow:0 1px 4px rgba(0,0,0,.05);}.provs-wrap{margin-bottom:8px;}
+.cr{background:var(--surface);border-radius:var(--rl);margin-bottom:5px;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:0 14px;}.cr-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line2);}.cr-row:last-child{border-bottom:none;}.cr-ic{width:30px;height:30px;border-radius:8px;background:var(--acc-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;}.cr-ic svg{width:14px;height:14px;color:var(--acc);}.cr-txt strong{font-size:.78rem;font-weight:600;color:var(--ink);display:block;}.cr-txt span{font-size:.62rem;color:var(--ink3);}
+.foot{text-align:center;padding:8px 16px 20px;font-size:.54rem;color:var(--ink3);line-height:1.7;}.foot a{color:var(--acc);text-decoration:underline;}
+
+/* ═══ PROFIEL ═══ */
+.prof-hero{background:var(--surface);border-bottom:1px solid var(--line);padding:8px 20px 6px;text-align:center;}
+.prof-avatar{width:96px;height:96px;border-radius:22px;overflow:hidden;margin:0 auto 4px;}
+.prof-name{font-size:1.2rem;font-weight:800;color:var(--ink);letter-spacing:-.03em;}.prof-name i{color:var(--acc);font-style:normal;}.prof-tag{font-size:.68rem;color:var(--ink3);margin-top:1px;}
+.prof-stats{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--surface);border-bottom:1px solid var(--line);}.ps{padding:10px 8px;text-align:center;border-right:1px solid var(--line);}.ps:last-child{border-right:none;}.ps-v{font-size:1.05rem;font-weight:800;color:var(--acc);letter-spacing:-.02em;}.ps-l{font-size:.52rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-top:1px;}
+.prow{background:var(--surface);border-radius:var(--rl);margin-bottom:5px;box-shadow:0 1px 4px rgba(0,0,0,.05);display:flex;align-items:center;justify-content:space-between;padding:13px 14px;cursor:pointer;}.prow:active{background:var(--bg);}
+.prow-l{display:flex;align-items:center;gap:10px;}.prow-ic{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}.prow-ic svg{width:15px;height:15px;}.prow-txt{flex:1;}.prow-txt strong{font-size:.82rem;font-weight:600;color:var(--ink);display:block;}.prow-txt span{font-size:.62rem;color:var(--ink3);}.prow-chev{width:14px;height:14px;color:var(--ink3);flex-shrink:0;}
+.login-card{background:var(--surface);border-radius:var(--rl);margin-bottom:5px;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:18px;text-align:center;}.login-card h3{font-size:.9rem;font-weight:700;color:var(--ink);margin-bottom:4px;}.login-card p{font-size:.68rem;color:var(--ink3);line-height:1.5;margin-bottom:14px;}
+.login-btns{display:flex;gap:8px;}.login-btn{flex:1;padding:11px;border-radius:var(--r);font-family:var(--f);font-size:.78rem;font-weight:700;cursor:pointer;border:none;}.login-btn-primary{background:var(--acc);color:#fff;}.login-btn-secondary{background:var(--bg);color:var(--ink2);border:1px solid var(--line);}
+.pas-card{background:var(--surface);border-radius:var(--rl);margin-bottom:5px;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;}.pas-row{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line2);}.pas-row:last-child{border-bottom:none;}.pas-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}.pas-name{font-size:.8rem;font-weight:600;color:var(--ink);flex:1;}.pas-status{font-size:.6rem;font-weight:600;padding:2px 8px;border-radius:99px;}.pas-add{display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 14px;color:var(--acc);font-size:.74rem;font-weight:600;cursor:pointer;border-top:1px solid var(--line2);}.pas-add svg{width:14px;height:14px;}
+.tog-card{background:var(--surface);border-radius:var(--rl);margin-bottom:5px;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:0 14px;}
+.p-tog-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line2);}.p-tog-row:last-child{border-bottom:none;}.p-tog-txt strong{font-size:.8rem;font-weight:600;color:var(--ink);display:block;}.p-tog-txt span{font-size:.6rem;color:var(--ink3);}
+
+/* ═══ ENHANCED SHEET ═══ */
+.sh-stekker{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.sh-stk-chip{display:flex;align-items:center;gap:5px;background:var(--blue-bg);border:1px solid rgba(42,126,248,.12);border-radius:8px;padding:5px 10px;font-size:.64rem;font-weight:600;color:var(--blue);}
+.sh-stk-chip svg{width:12px;height:12px;}
+.sh-config{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0;}
+.sh-config-title{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);margin-bottom:10px;}
+.sh-config-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.sh-config-row:last-child{margin-bottom:0;}
+.sh-config-lbl{font-size:.72rem;font-weight:600;color:var(--ink2);}
+.sh-config-val{font-size:.72rem;font-weight:700;color:var(--ink);}
+.sh-config-val.green{color:var(--acc);}
+.sh-vehicle-sel{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:var(--f);font-size:.74rem;font-weight:600;color:var(--ink);cursor:pointer;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238590a2' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+.sh-vehicle-sel:focus{border-color:var(--acc);outline:none;}
+.sh-bat-wrap{margin:10px 0 4px;}
+.sh-bat-row{display:flex;align-items:center;gap:8px;}
+.sh-bat-lbl{font-size:.58rem;font-weight:600;color:var(--ink3);min-width:28px;text-align:center;}
+.sh-bat-slider{flex:1;-webkit-appearance:none;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--acc) 0%,var(--acc-bg) 100%);outline:none;}
+.sh-bat-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--acc);border:3px solid #fff;box-shadow:0 1px 5px rgba(29,184,126,.3);cursor:pointer;}
+.sh-est{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:10px 0 14px;}
+.sh-est-item{flex:1;padding:10px 6px;text-align:center;border-right:1px solid var(--line);background:var(--surface);}
+.sh-est-item:last-child{border-right:none;}
+.sh-est-v{font-size:.88rem;font-weight:800;color:var(--ink);letter-spacing:-.02em;}
+.sh-est-v.green{color:var(--acc);}
+.sh-est-l{font-size:.48rem;color:var(--ink3);margin-top:2px;text-transform:uppercase;letter-spacing:.06em;}
+.sh-report{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:11px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--ink3);font-family:var(--f);font-size:.72rem;font-weight:500;cursor:pointer;margin-top:14px;transition:all .14s;}
+.sh-report:hover{border-color:var(--red);color:var(--red);background:var(--red-bg);}
+.sh-report svg{width:13px;height:13px;}
+.sh-tariff{background:var(--bg);border-radius:10px;padding:12px;margin:10px 0;border:1px solid var(--line);}
+.sh-tariff-title{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.sh-tariff-title svg{width:11px;height:11px;}
+.sh-tariff-row{display:flex;justify-content:space-between;padding:5px 0;font-size:.7rem;border-bottom:1px solid var(--line2);}
+.sh-tariff-row:last-child{border-bottom:none;}
+.sh-tariff-row .lbl{color:var(--ink3);}
+.sh-tariff-row .val{font-weight:700;color:var(--ink);}
+.sh-tariff-row .val.green{color:var(--acc);}
+.pr-total{font-size:.62rem;color:var(--ink3);margin-top:2px;}
+.pr-total strong{color:var(--ink);font-weight:700;}
+
+/* ═══ DEMO: SPLASH ═══ */
+#splash{position:absolute;inset:0;z-index:2000;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .45s;}
+#splash.hide{opacity:0;pointer-events:none;}
+#splash img{width:118px;height:118px;margin-bottom:8px;}
+.splash-brand{font-size:1.6rem;font-weight:800;letter-spacing:-.03em;color:var(--ink);}
+.splash-brand i{color:var(--acc);font-style:normal;}
+.splash-tag{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink3);font-weight:600;margin-top:7px;}
+.splash-dots{display:flex;gap:6px;position:absolute;bottom:46px;}
+.splash-dots i{width:5px;height:5px;border-radius:50%;background:var(--acc);opacity:.35;animation:pulse 1.2s ease-in-out infinite;}
+.splash-dots i:nth-child(2){animation-delay:.2s;}.splash-dots i:nth-child(3){animation-delay:.4s;}
+
+/* ═══ DEMO: ONBOARDING ═══ */
+#onboard{position:absolute;inset:0;z-index:1900;background:var(--bg);display:flex;flex-direction:column;transition:opacity .4s;}
+#onboard.hide{opacity:0;pointer-events:none;}
+#obmap{flex:1;position:relative;min-height:0;}
+#obmap::after{content:'';position:absolute;inset:0;z-index:500;}
+.ob-sheet{background:var(--surface);border-radius:18px 18px 0 0;margin-top:-18px;position:relative;z-index:600;padding:10px 18px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -8px 40px rgba(0,0,0,.12);flex-shrink:0;}
+.ob-handle{width:32px;height:3px;background:var(--line);border-radius:2px;margin:0 auto 12px;}
+.ob-brand{font-size:.95rem;font-weight:800;letter-spacing:-.03em;color:var(--ink);margin-bottom:8px;}
+.ob-brand i{color:var(--acc);font-style:normal;}
+.ob-title{font-size:1.45rem;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1.15;margin-bottom:5px;}
+.ob-sub{font-size:.74rem;color:var(--ink3);line-height:1.55;margin-bottom:14px;}
+.ob-primary{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:14px;border-radius:12px;border:none;background:var(--acc);color:#fff;font-family:var(--f);font-size:.9rem;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(29,184,126,.3);}
+.ob-primary:hover{background:var(--acc-dk);}
+.ob-primary svg{width:15px;height:15px;}
+.ob-ghost{width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-family:var(--f);font-size:.84rem;font-weight:600;cursor:pointer;margin-top:8px;}
+.ob-oauth{display:flex;justify-content:center;gap:16px;margin-top:14px;}
+.ob-o{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink2);}
+.ob-o svg{width:18px;height:18px;}
+.ob-o span{font-size:.6rem;font-weight:700;font-family:var(--f);}
+.ob-legal{text-align:center;color:#aab2bf;font-size:.58rem;line-height:1.5;margin-top:12px;}
+.ob-legal u{text-decoration:none;color:var(--ink3);}
+</style>
+</head>
+<body>
+<div id="phone">
+
+<!-- ═══ DEMO: SPLASH ═══ -->
+<div id="splash">
+  <img src="icons/icon-512-v3.png" alt="FairPlug">
+  <div class="splash-brand">Fair<i>Plug</i></div>
+  <div class="splash-tag">One pass · Lowest price</div>
+  <div class="splash-dots"><i></i><i></i><i></i></div>
+</div>
+
+<!-- ═══ DEMO: ONBOARDING ═══ -->
+<div id="onboard">
+  <div id="obmap"></div>
+  <div class="ob-sheet">
+    <div class="ob-handle"></div>
+    <div class="ob-brand">Fair<i>Plug</i></div>
+    <h2 class="ob-title">De laagste laadprijs.<br>Altijd.</h2>
+    <p class="ob-sub">Wij vergelijken live ANWB, E-flux, Shell Recharge en 20+ aanbieders — per laadpaal, met jouw passen.</p>
+    <button class="ob-primary" onclick="dismissOnboard()">Aan de slag <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    <button class="ob-ghost" onclick="dismissOnboard('Welkom terug!')">Ik heb al een account</button>
+    <div class="ob-oauth">
+      <button class="ob-o" onclick="dismissOnboard('Inloggen met Apple komt binnenkort')" aria-label="Apple"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.7 12.9c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-2-.9-3.2-.9-1.7 0-3.2 1-4 2.5-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.1-1.2 2.9-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.4-1-2.4-3.9ZM14.4 5.6c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.8-1.5Z"/></svg></button>
+      <button class="ob-o" onclick="dismissOnboard('Inloggen met Google komt binnenkort')" aria-label="Google"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.2a5.3 5.3 0 0 1-2.3 3.5v2.9h3.7C21.7 18.8 23 15.9 23 12.3Z"/><path fill="#34A853" d="M12 23c3.1 0 5.7-1 7.6-2.8l-3.7-2.9c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.7H1.8v3C3.7 20.5 7.5 23 12 23Z"/><path fill="#FBBC05" d="M5.6 13.7a6.6 6.6 0 0 1 0-4.3v-3H1.8a11 11 0 0 0 0 10.3Z"/><path fill="#EA4335" d="M12 5.6c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.7 2.1 15.1 1 12 1 7.5 1 3.7 3.5 1.8 7.4l3.8 3C6.5 7.6 9 5.6 12 5.6Z"/></svg></button>
+      <button class="ob-o" onclick="dismissOnboard()"><span>Gast</span></button>
+    </div>
+    <div class="ob-legal">Door verder te gaan accepteer je de <u>Servicevoorwaarden</u> en het <u>Privacybeleid</u>.</div>
+  </div>
+</div>
+
+<header id="hdr">
+  <div class="hdr-brand">Fair<i>Plug</i></div>
+  <div class="hdr-r">
+    <div class="live-tag"><span class="live-dot"></span>Live</div>
+    <button class="circ" id="menuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg></button>
+  </div>
+</header>
+
+<!-- ═══ LOCATION PICKER ═══ -->
+<div id="loc-modal">
+  <div class="loc-sheet">
+    <div class="loc-sheet-head">
+      <div class="loc-handle"></div>
+      <div class="loc-title">Kies jouw regio</div>
+      <div class="loc-sub">We tonen de goedkoopste palen in jouw buurt.</div>
+      <div class="loc-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="loc-inp" type="search" placeholder="Zoek stad of regio…" autocomplete="off"/></div>
+    </div>
+    <div class="loc-scroll"><div id="loc-list"></div></div>
+    <div class="loc-sheet-foot"><button class="btn-primary" onclick="confirmLocation()">Bevestig locatie</button></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: DASHBOARD ═══ -->
+<div id="page-dash" class="page active">
+  <div class="bar">
+    <div class="bar-l">
+      <div class="bar-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#e03535" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+      <div><div class="bar-name" id="regio-name">Hoogeveen</div><div class="bar-sub" id="regio-sub">Drenthe</div></div>
+    </div>
+    <button class="bar-btn" onclick="openLocPicker()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="12" height="12"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Wijzig</button>
+  </div>
+  <div class="bar eng-bar">
+    <div class="eng-l"><div class="eng-dot"></div><div class="eng-txt"><strong>SmartPrice</strong> — ANWB · E-flux · Shell Recharge</div></div>
+    <div class="eng-pill" id="eng-timer">Actief</div>
+  </div>
+  <div class="pad" id="dash-scroll">
+    <div class="sec-row"><span class="sec-lbl">Jouw passen vergeleken</span></div>
+    <div style="background:var(--surface);border-radius:var(--rl);margin-bottom:6px;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:10px 12px;display:flex;gap:8px;align-items:center">
+      <div style="flex:1;display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:0 10px;height:34px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="pole-inp" type="text" placeholder="Paalnummer of adres" style="flex:1;background:none;border:none;outline:none;font-family:var(--f);font-size:.74rem;color:var(--ink)" autocomplete="off"/>
+      </div>
+      <button onclick="searchPole()" style="height:34px;padding:0 10px;border-radius:8px;background:var(--acc);border:none;color:#fff;font-family:var(--f);font-size:.66rem;font-weight:700;cursor:pointer">Zoek</button>
+    </div>
+    <div id="dash-compare" style="background:var(--surface);border-radius:var(--rl);margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden"></div>
+    <div class="sec-row"><span class="sec-lbl">Top 5 in jouw buurt</span><span class="sec-tag" id="top5-city">Hoogeveen</span></div>
+    <div id="dash-top5"></div>
+    <div style="height:14px"></div>
+    <div class="sec-row"><span class="sec-lbl">Alle palen — Top 50</span><span class="sec-tag">Heel Nederland</span></div>
+    <div id="dash-all"></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: KAART ═══ -->
+<div id="page-kaart" class="page">
+  <div id="map-wrap">
+    <div id="map"></div>
+    <div id="top-bar">
+      <div class="fpill" id="filterPill"><button class="on" data-f="alle">Alle</button><button data-f="snel">Snel</button></div>
+      <div></div>
+    </div>
+    <div id="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span>Live prijzen vergelijken bij elke laadpaal</span></div>
+    <button id="fabLoc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></button>
+    <div id="bottom">
+      <div id="bhandle"></div>
+      <div id="brow">
+        <div class="bsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="search" placeholder="Vind opladers" id="sinp" autocomplete="off"/></div>
+        <button class="bbtn" id="qrBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M17 17h3v3M14 20h3"/></svg></button>
+        <button class="bbtn" id="fBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button>
+      </div>
+      <div id="sres"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: OVER ONS ═══ -->
+<div id="page-over" class="page" style="overflow-y:auto">
+  <div class="hero">
+    <div class="hero-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Sinds 2026</div>
+    <h1>Nooit meer te veel<br>betalen bij de laadpaal.</h1>
+    <p>FairPlug vergelijkt realtime de prijzen van alle laadpas-aanbieders op 100.000+ laadpunten in Nederland. Scan, vergelijk en bespaar.</p>
+    <div class="hero-btns">
+      <button class="hbtn hbtn-w" onclick="switchPage('dash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Start besparen</button>
+      <button class="hbtn hbtn-g" onclick="showToast('QR Scanner opent')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M17 17h3v3M14 20h3"/></svg>Scan laadpaal</button>
+    </div>
+  </div>
+  <div class="pad" style="flex:1;overflow-y:auto">
+    <div class="sec-row"><span class="sec-lbl">Wat wij doen</span></div>
+    <div class="card"><h3>Eerlijke laadprijzen voor iedereen</h3><p>Dezelfde laadpaal kan tot €0,30/kWh verschil hebben tussen aanbieders. Bij 50 kWh betaal je dan tot €15 te veel.</p><p>FairPlug vergelijkt elke 7 seconden de prijzen van 20+ aanbieders op meer dan 100.000 publieke laadpunten in Nederland.</p><p>Volledig onafhankelijk: geen opslag, geen commissie.</p></div>
+    <div class="sec-row"><span class="sec-lbl">Hoe het werkt</span></div>
+    <div class="step"><div class="step-n">1</div><div><h4>Open FairPlug of scan de paal</h4><p>Deel je locatie, zoek een adres, of scan de QR-code</p></div></div>
+    <div class="step"><div class="step-n">2</div><div><h4>Vergelijk alle aanbieders</h4><p>Bekijk prijzen gesorteerd van goedkoopst naar duurste</p></div></div>
+    <div class="step"><div class="step-n">3</div><div><h4>Start laden via de goedkoopste</h4><p>We sturen je door, zonder opslag of tussenpersoon</p></div></div>
+    <div class="sec-row"><span class="sec-lbl">Bereken je besparing</span></div>
+    <div class="calc-card">
+      <div style="padding:12px 14px 0;display:flex;gap:8px">
+        <div style="flex:1;background:var(--red-bg);border-radius:8px;padding:10px;text-align:center"><div style="font-size:.52rem;color:var(--red);font-weight:600;margin-bottom:2px">Zonder FairPlug</div><div style="font-size:1rem;font-weight:800;color:var(--red)">€ 0,48<span style="font-size:.52rem;font-weight:400;color:var(--ink3)">/kWh</span></div></div>
+        <div style="flex:1;background:var(--acc-bg);border-radius:8px;padding:10px;text-align:center"><div style="font-size:.52rem;color:var(--acc);font-weight:600;margin-bottom:2px">Met FairPlug</div><div style="font-size:1rem;font-weight:800;color:var(--acc)">€ 0,34<span style="font-size:.52rem;font-weight:400;color:var(--ink3)">/kWh</span></div></div>
+      </div>
+      <div class="calc-inner">
+        <div class="calc-row"><div class="calc-lbl">Kilometers per jaar <span id="kmVal">15.000 km</span></div><input type="range" class="calc-slider" id="kmSlider" min="5000" max="60000" step="1000" value="15000"/></div>
+        <div class="calc-row"><div class="calc-lbl">kWh per laadbeurt <span id="kwhVal">30 kWh</span></div><input type="range" class="calc-slider" id="kwhSlider" min="10" max="80" step="5" value="30"/></div>
+      </div>
+      <div class="calc-res">
+        <div class="calc-res-item"><div class="calc-res-v" id="cLaad">€ 4,20</div><div class="calc-res-l">Per laadbeurt</div></div>
+        <div class="calc-res-item"><div class="calc-res-v" id="cMaand">€ 31</div><div class="calc-res-l">Per maand</div></div>
+        <div class="calc-res-item"><div class="calc-res-v" id="cJaar">€ 378</div><div class="calc-res-l">Per jaar</div></div>
+      </div>
+    </div>
+    <div class="sec-row"><span class="sec-lbl">Scan een laadpaal</span></div>
+    <div class="scan"><div class="scan-top"><div class="scan-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M17 17h3v3M14 20h3"/></svg></div><div class="scan-txt"><h4>QR-code of ID scannen</h4><p>Richt je camera op de laadpaal en FairPlug toont direct de goedkoopste aanbieder.</p></div></div><button class="scan-btn" onclick="showToast('QR Scanner opent')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M17 17h3v3M14 20h3"/></svg>Open QR Scanner</button></div>
+    <div class="sec-row"><span class="sec-lbl">Aanbieders</span><span class="sec-lbl" style="font-weight:400;text-transform:none;letter-spacing:0">20+</span></div>
+    <div class="provs-wrap"><div class="provs" id="provsGrid">
+      <div class="prov"><div class="prov-n">Shell Recharge</div><div class="prov-t">Laadpas</div></div><div class="prov"><div class="prov-n">Vattenfall</div><div class="prov-t">Laadpas</div></div><div class="prov"><div class="prov-n">ANWB</div><div class="prov-t">Laadpas</div></div><div class="prov"><div class="prov-n">E-flux</div><div class="prov-t">Laadpas</div></div><div class="prov"><div class="prov-n">Fastned</div><div class="prov-t">Snellader</div></div><div class="prov"><div class="prov-n">TotalEnergies</div><div class="prov-t">Netwerk</div></div>
+      <div id="provs-extra"><div class="prov"><div class="prov-n">Allego</div><div class="prov-t">Netwerk</div></div><div class="prov"><div class="prov-n">Tap Electric</div><div class="prov-t">Laadpas</div></div><div class="prov"><div class="prov-n">Eneco</div><div class="prov-t">Laadpas</div></div><div class="prov"><div class="prov-n">Greenchoice</div><div class="prov-t">Laadpas</div></div><div class="prov"><div class="prov-n">Plugsurfing</div><div class="prov-t">Laadpas</div></div><div class="prov"><div class="prov-n">Ionity</div><div class="prov-t">Snellader</div></div><div class="prov"><div class="prov-n">EVBox</div><div class="prov-t">Netwerk</div></div><div class="prov"><div class="prov-n">LastMileSol.</div><div class="prov-t">Netwerk</div></div><div class="prov"><div class="prov-n">BlueCorner</div><div class="prov-t">Netwerk</div></div></div>
+      <div class="provs-more" id="provsMore" onclick="toggleProvs()">+ 9 meer aanbieders</div>
+    </div></div>
+    <div class="sec-row"><span class="sec-lbl">Contact</span></div>
+    <div class="cr">
+      <div class="cr-row"><div class="cr-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div><div class="cr-txt"><strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fd94939b92bd9b9c948f8d91889ad39391">[email&#160;protected]</a></strong><span>E-mail</span></div></div>
+      <div class="cr-row"><div class="cr-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div class="cr-txt"><strong>Hoogeveen, Drenthe</strong><span>Locatie</span></div></div>
+      <div class="cr-row"><div class="cr-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="cr-txt"><strong>www.fairplug.nl</strong><span>Website</span></div></div>
+    </div>
+    <div class="foot">© 2026 FairPlug. <a href="#">Voorwaarden</a> · <a href="#">Privacy</a></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: PASSEN ═══ -->
+<div id="page-passen" class="page">
+  <div class="bar eng-bar">
+    <div class="eng-l"><div class="eng-dot"></div><div class="eng-txt"><strong>SmartPrice</strong> — jouw passen live vergeleken</div></div>
+    <div class="eng-pill">Actief</div>
+  </div>
+  <div class="pad" id="passen-scroll" style="overflow-y:auto"></div>
+</div>
+
+<!-- ═══ PAGE: PROFIEL ═══ -->
+<div id="page-profiel" class="page" style="overflow-y:auto">
+  <div class="prof-hero"><div class="prof-avatar"><img src="https://cdn.shopify.com/s/files/1/0933/6232/3831/files/UnFilter_6.jpg?v=1773765491" alt="FairPlug" style="width:100%;height:100%;border-radius:22px;object-fit:cover;"></div><div class="prof-name">Fair<i>Plug</i></div><div class="prof-tag">Jouw passen, altijd de slimste keuze.</div></div>
+  <div class="prof-stats"><div class="ps"><div class="ps-v">3</div><div class="ps-l">Mijn passen</div></div><div class="ps"><div class="ps-v">€ 0</div><div class="ps-l">Bespaard</div></div><div class="ps"><div class="ps-v">0</div><div class="ps-l">Sessies</div></div></div>
+  <div class="pad" style="flex:1;overflow-y:auto">
+    <div class="sec-row"><span class="sec-lbl">Account</span></div>
+    <div class="login-card"><h3>Log in om je passen te beheren</h3><p>Voeg je laadpassen toe en ontvang meldingen als jouw goedkoopste pas nog goedkoper wordt.</p><div class="login-btns"><button class="login-btn login-btn-primary" onclick="showToast('Inloggen komt binnenkort')">Inloggen</button><button class="login-btn login-btn-secondary" onclick="showToast('Registreren komt binnenkort')">Registreren</button></div></div>
+    <div class="sec-row"><span class="sec-lbl">Mijn laadpassen</span></div>
+    <div class="card" style="padding:14px;margin-bottom:5px"><h3 style="font-size:.82rem">Voeg je passen toe, wij vergelijken</h3><p style="font-size:.68rem;color:var(--ink3);line-height:1.55;margin-bottom:0">Heb je meerdere laadpassen? Voeg ze toe en FairPlug toont bij elke laadpaal welke van jouw passen het goedkoopst is.</p></div>
+    <div class="pas-card">
+      <div class="pas-row"><div class="pas-dot" style="background:var(--acc)"></div><div class="pas-name">ANWB Energie</div><span class="pas-status" style="background:var(--acc-bg);color:var(--acc)">Actief</span></div>
+      <div class="pas-row"><div class="pas-dot" style="background:var(--acc)"></div><div class="pas-name">E-flux</div><span class="pas-status" style="background:var(--acc-bg);color:var(--acc)">Actief</span></div>
+      <div class="pas-row"><div class="pas-dot" style="background:var(--acc)"></div><div class="pas-name">Shell Recharge</div><span class="pas-status" style="background:var(--acc-bg);color:var(--acc)">Actief</span></div>
+      <div class="pas-row"><div class="pas-dot" style="background:var(--ink3)"></div><div class="pas-name">Vattenfall</div><span class="pas-status" style="background:var(--bg);color:var(--ink3)">Inactief</span></div>
+      <div class="pas-add" onclick="showToast('Laadpas toevoegen komt binnenkort')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Laadpas toevoegen</div>
+    </div>
+    <div class="card" style="padding:0;margin-bottom:5px;overflow:hidden">
+      <div style="padding:14px 14px 10px;display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:.82rem;font-weight:700;color:var(--ink)">Jumbo Hoogeveen</div><div style="font-size:.6rem;color:var(--ink3);margin-top:1px">50 kW DC snellader</div></div><span class="badge bg" style="font-size:.56rem">Live</span></div>
+      <div style="padding:0 14px 12px">
+        <div style="display:flex;align-items:center;padding:10px 12px;background:var(--acc-bg);border:1px solid rgba(29,184,126,.15);border-radius:10px;margin-bottom:6px"><div style="width:22px;height:22px;border-radius:6px;background:var(--acc);color:#fff;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px">1</div><span style="flex:1;font-size:.8rem;font-weight:700;color:var(--ink)">ANWB Energie</span><span style="font-size:.95rem;font-weight:800;color:var(--acc)">€ 0,34</span><span style="font-size:.5rem;color:var(--ink3);margin-left:2px">/kWh</span></div>
+        <div style="display:flex;align-items:center;padding:9px 12px;background:var(--bg);border-radius:10px;margin-bottom:4px"><div style="width:22px;height:22px;border-radius:6px;background:var(--bg2);color:var(--ink3);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px">2</div><span style="flex:1;font-size:.78rem;font-weight:600;color:var(--ink2)">E-flux</span><span style="font-size:.88rem;font-weight:700;color:var(--ink2)">€ 0,39</span><span style="font-size:.5rem;color:var(--ink3);margin-left:2px">/kWh</span></div>
+        <div style="display:flex;align-items:center;padding:9px 12px;background:var(--bg);border-radius:10px"><div style="width:22px;height:22px;border-radius:6px;background:var(--bg2);color:var(--ink3);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px">3</div><span style="flex:1;font-size:.78rem;font-weight:600;color:var(--ink2)">Shell Recharge</span><span style="font-size:.88rem;font-weight:700;color:var(--ink2)">€ 0,48</span><span style="font-size:.5rem;color:var(--ink3);margin-left:2px">/kWh</span></div>
+      </div>
+      <div style="padding:11px 14px;background:var(--acc);display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" width="13" height="13"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span style="font-size:.72rem;font-weight:700;color:#fff">Gebruik ANWB Energie — bespaar € 7,00 bij 50 kWh</span></div>
+    </div>
+    <div class="sec-row"><span class="sec-lbl">Binnenkort</span></div>
+    <div style="background:linear-gradient(145deg,var(--acc),var(--acc-dk));border-radius:var(--rl);padding:16px;margin-bottom:5px;position:relative;overflow:hidden"><div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06)"></div><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div><div style="font-size:.88rem;font-weight:700;color:#fff">FairPlug Pas</div><div style="font-size:.58rem;color:rgba(255,255,255,.65)">Eén pas, altijd goedkoopst, overal</div></div></div><div style="font-size:.68rem;color:rgba(255,255,255,.8);line-height:1.55;margin-bottom:10px">Straks hoef je niet meer zelf te kiezen. Eén FairPlug pas, en wij betalen automatisch via de goedkoopste aanbieder.</div><div style="display:inline-flex;align-items:center;gap:5px;font-size:.64rem;font-weight:700;color:#fff;background:rgba(255,255,255,.18);padding:5px 12px;border-radius:99px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Houd me op de hoogte</div></div>
+    <div class="sec-row"><span class="sec-lbl">Instellingen</span></div>
+    <div class="tog-card">
+      <div class="p-tog-row"><div class="p-tog-txt"><strong>Prijsmeldingen</strong><span>Melding als jouw goedkoopste pas nog goedkoper wordt</span></div><button class="tog on"></button></div>
+      <div class="p-tog-row"><div class="p-tog-txt"><strong>Alleen mijn passen tonen</strong><span>Vergelijk alleen aanbieders waar jij een pas van hebt</span></div><button class="tog on"></button></div>
+      <div class="p-tog-row"><div class="p-tog-txt"><strong>Locatie delen</strong><span>Toon laadpalen in je buurt</span></div><button class="tog on"></button></div>
+      <div class="p-tog-row"><div class="p-tog-txt"><strong>Groene stroom filter</strong><span>Alleen duurzame energie tonen</span></div><button class="tog"></button></div>
+    </div>
+    <div class="sec-row"><span class="sec-lbl">Meer</span></div>
+    <div class="prow" onclick="showToast('Laadgeschiedenis komt binnenkort')"><div class="prow-l"><div class="prow-ic" style="background:var(--acc-bg)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="prow-txt"><strong>Laadgeschiedenis</strong><span>Bekijk al je laadsessies</span></div></div><svg class="prow-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="prow" onclick="showToast('Favorieten komt binnenkort')"><div class="prow-l"><div class="prow-ic" style="background:var(--red-bg)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="prow-txt"><strong>Favoriete laadpalen</strong><span>Snel toegang tot je vaste palen</span></div></div><svg class="prow-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="prow" onclick="showToast('Besparingstracker komt binnenkort')"><div class="prow-l"><div class="prow-ic" style="background:var(--acc-bg)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="prow-txt"><strong>Besparingstracker</strong><span>Zie hoeveel je bespaart per week, maand en jaar</span></div></div><svg class="prow-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="prow" onclick="showToast('Slimme meldingen komen binnenkort')"><div class="prow-l"><div class="prow-ic" style="background:var(--amber-bg)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><div class="prow-txt"><strong>Slimme meldingen</strong><span>Push als een paal bij jou in de buurt goedkoper is</span></div></div><svg class="prow-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="prow" onclick="showToast('Route-integratie komt binnenkort')"><div class="prow-l"><div class="prow-ic" style="background:var(--blue-bg)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></div><div class="prow-txt"><strong>Route-integratie</strong><span>Plan je route met de goedkoopste laadstops onderweg</span></div></div><svg class="prow-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="prow" onclick="showToast('FairPlug Zakelijk komt binnenkort')"><div class="prow-l"><div class="prow-ic" style="background:var(--purple-bg)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/></svg></div><div class="prow-txt"><strong>FairPlug Zakelijk</strong><span>Wagenparken collectief besparen met één dashboard</span></div></div><svg class="prow-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="prow" onclick="showToast('Widget komt binnenkort')"><div class="prow-l"><div class="prow-ic" style="background:var(--bg2)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="prow-txt"><strong>Widget voor homescreen</strong><span>Goedkoopste paal zien zonder app te openen</span></div></div><svg class="prow-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="prow" onclick="showToast('CarPlay & Android Auto komt binnenkort')"><div class="prow-l"><div class="prow-ic" style="background:var(--blue-bg)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div class="prow-txt"><strong>CarPlay & Android Auto</strong><span>Prijzen direct op je autoscherm tijdens het rijden</span></div></div><svg class="prow-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="prow" onclick="showToast('Over FairPlug — v1.0.0')"><div class="prow-l"><div class="prow-ic" style="background:var(--bg2)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><div class="prow-txt"><strong>Over FairPlug</strong><span>Versie 1.0.0</span></div></div><svg class="prow-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="foot">FairPlug v1.0.0 · 100.000+ laadpunten<br>© 2026 FairPlug B.V. · <a href="#">Voorwaarden</a> · <a href="#">Privacy</a></div>
+  </div>
+</div>
+
+<!-- ═══ NAV ═══ -->
+<nav id="nav">
+  <button class="ntab active" data-p="dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="ntab-lbl">Dashboard</span></button>
+  <button class="ntab" data-p="kaart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg><span class="ntab-lbl">Kaart</span></button>
+  <button class="ntab" data-p="passen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span class="ntab-lbl">Passen</span></button>
+  <button class="ntab" data-p="profiel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="ntab-lbl">Profiel</span></button>
+</nav>
+
+<!-- ═══ OVERLAYS ═══ -->
+<div id="ovl"></div>
+<div id="sheet"><div id="shd"></div><div id="sbc"></div></div>
+<div id="menu">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><h2 style="font-size:1.1rem;font-weight:800;color:var(--ink)">Fair<i style="color:var(--acc);font-style:normal">Plug</i></h2><button class="m-close" id="menuX"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);margin:18px 0 8px">Account</div>
+  <div class="m-item" onclick="showToast('Inloggen komt binnenkort')"><div class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#e03535" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="m-txt"><strong>Inloggen</strong><small>Sla favorieten op</small></div></div>
+  <div class="m-item" onclick="showToast('Laadgeschiedenis komt binnenkort')"><div class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#e03535" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="m-txt"><strong>Laadgeschiedenis</strong><small>Bekijk je sessies</small></div></div>
+  <div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);margin:18px 0 8px">Instellingen</div>
+  <div class="m-item" onclick="showToast('Meldingen staan aan')"><div class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#e03535" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><div class="m-txt"><strong>Meldingen</strong><small>Prijsdalingen ontvangen</small></div></div>
+  <div class="m-item" onclick="showToast('Taal: Nederlands')"><div class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#e03535" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="m-txt"><strong>Taal</strong><small>Nederlands</small></div></div>
+  <div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);margin:18px 0 8px">Over</div>
+  <div class="m-item" onclick="switchPage('over')"><div class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#e03535" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><div class="m-txt"><strong>Over FairPlug</strong><small>Missie, werkwijze & besparing</small></div></div>
+</div>
+<div id="fpanel">
+  <div class="fp-h"><h3>Filters</h3><button class="m-close" id="fpX"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="fp-lbl">Snelheid</div><div class="fp-opts"><button class="fp-opt on" data-v="alle">Alle</button><button class="fp-opt" data-v="ac">AC (≤22 kW)</button><button class="fp-opt" data-v="dc">DC (≥50 kW)</button><button class="fp-opt" data-v="hpc">HPC (≥150 kW)</button></div>
+  <div class="fp-lbl">Status</div><div class="fp-opts"><button class="fp-opt on" data-v="alle">Alle</button><button class="fp-opt" data-v="vrij">Alleen vrij</button><button class="fp-opt" data-v="bezet">Bezet</button></div>
+  <div class="fp-lbl">Aanbieder</div><div class="fp-opts"><button class="fp-opt on" data-v="alle">Alle</button><button class="fp-opt" data-v="tap">Tap Electric</button><button class="fp-opt" data-v="fastned">Fastned</button><button class="fp-opt" data-v="newmotion">Shell Recharge</button><button class="fp-opt" data-v="total">TotalEnergies</button></div>
+  <div class="fp-lbl" style="margin-top:4px;margin-bottom:2px">Opties</div>
+  <div class="tog-row"><div><div class="tog-label">24/7 beschikbaar</div><div class="tog-desc">Alleen altijd open palen</div></div><button class="tog on"></button></div>
+  <div class="tog-row"><div><div class="tog-label">Groene stroom</div><div class="tog-desc">Alleen duurzame energie</div></div><button class="tog"></button></div>
+  <button class="fp-apply" id="fpApply">Filters toepassen</button>
+</div>
+<div id="toast"></div>
+</div>
+<script>
+'use strict';
+/* ═══ SHARED ═══ */
+var OPS={tap:{name:'Tap Electric',url:'https://www.tapelectric.nl'},anwb:{name:'ANWB Energie',url:'https://www.anwb.nl/elektrisch-rijden/laden'},eflux:{name:'E-flux',url:'https://e-flux.nl'},vattenfall:{name:'Vattenfall',url:'https://www.vattenfall.nl'},allego:{name:'Allego',url:'https://www.allego.eu'},newmotion:{name:'Shell Recharge',url:'https://www.shellrecharge.com/nl-nl'},fastned:{name:'Fastned',url:'https://fastned.nl'},total:{name:'TotalEnergies',url:'https://charging.totalenergies.nl'}};
+var USER_PASSES=['anwb','eflux','newmotion'];
+function mkrng(seed){var s=seed>>>0;return function(){s=(Math.imul(1664525,s)+1013904223)>>>0;return s/0x100000000;};}
+var fmt=function(p){return'\u20ac '+(+p).toFixed(2).replace('.',',')};
+var fmtKW=function(kw){return kw>=1000?(kw/1000)+'MW':kw+'kW'};
+function haversine(la1,lo1,la2,lo2){var R=6371,dL=(la2-la1)*Math.PI/180,dG=(lo2-lo1)*Math.PI/180;return R*2*Math.asin(Math.sqrt(Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dG/2)*Math.sin(dG/2)));}
+var fmtDist=function(km){return km<1?Math.round(km*1000)+' m':km.toFixed(1)+' km'};
+function statusBadge(s){return'<span class="badge '+(s.status==='VRIJ'?'bg':s.status==='BEZET'?'ba':'br')+'">'+s.status+'</span>';}
+function stColor(s){return s.status==='VRIJ'?'#1db87e':s.status==='BEZET'?'#e8a020':'#e03535';}
+var userLat=52.724,userLng=6.479;
+
+/* Station data */
+var STATIONS=(function(){var rng=mkrng(0xFAB17),ri=function(n){return Math.floor(rng()*n)},OI=Object.keys(OPS);var KW=[22,22,50,50,50,150,150,350],ST=['VRIJ','VRIJ','VRIJ','VRIJ','VRIJ','BEZET','BEZET','STORING'];var LOC=['P+R Stationsplein','NS Station','Albert Heijn','Lidl','Jumbo','IKEA','McDonald\'s','Path\u00e9','MediaMarkt','Action','Aldi','Decathlon','Hornbach','Gamma','Praxis','Winkelcentrum','Parkeergarage','Ziekenhuis','Sportcomplex','Bedrijventerrein'];var C=[['Rotterdam','Rotterdam',51.922,4.479,.045,500],['Amsterdam','Amsterdam',52.370,4.895,.055,600],['Den Haag','Den Haag',52.077,4.308,.040,400],['Utrecht','Utrecht',52.092,5.104,.035,340],['Haarlem','Haarlem',52.381,4.636,.020,170],['Almere','Almere',52.370,5.219,.025,170],['Eindhoven','Eindhoven',51.441,5.479,.030,270],['Tilburg','Tilburg',51.561,5.083,.025,220],['Breda','Breda',51.589,4.775,.025,190],['Maastricht','Maastricht',50.851,5.691,.020,130],['Nijmegen','Nijmegen',51.843,5.865,.025,170],['Arnhem','Arnhem',51.985,5.898,.025,170],['Zwolle','Zwolle',52.517,6.083,.025,170],['Enschede','Enschede',52.219,6.896,.022,150],['Groningen','Groningen',53.219,6.566,.030,260],['Leeuwarden','Leeuwarden',53.202,5.800,.022,130],['Emmen','Emmen',52.783,6.900,.030,170],['Assen','Assen',52.993,6.563,.025,160],['Hoogeveen','Hoogeveen',52.724,6.479,.022,130],['Meppel','Meppel',52.696,6.194,.018,95],['Amersfoort','Amersfoort',52.156,5.387,.022,150],['Lelystad','Lelystad',52.518,5.471,.020,100],['Middelburg','Middelburg',51.500,3.614,.018,95],['Venlo','Venlo',51.371,6.168,.018,100],['A1 Muiderberg','Snelweg A1',52.338,5.057,.008,14],['A2 Utrecht','Snelweg A2',52.143,5.104,.008,14],['A7 Groningen','Snelweg A7',53.219,6.506,.008,14],['A28 Zwolle','Snelweg A28',52.573,6.035,.008,14],['A50 Arnhem','Snelweg A50',51.970,5.884,.008,14]];var out=[],idx=0;for(var c=0;c<C.length;c++){var row=C[c];for(var i=0;i<row[5];i++){var a=rng()*6.2832,d=Math.sqrt(rng())*row[4],lat=+(row[2]+Math.cos(a)*d).toFixed(5),lng=+(row[3]+Math.sin(a)*d).toFixed(5);var kw=KW[ri(KW.length)],st=ST[ri(ST.length)],pool=OI.slice(),ops=[];for(var j=0;j<5;j++)ops.push(pool.splice(ri(pool.length),1)[0]);var base=.35+rng()*.20,priced=[];for(var j=0;j<ops.length;j++)priced.push([ops[j],Math.min(.70,+(base+j*(.05+rng()*.04)).toFixed(3))]);priced.sort(function(a,b){return a[1]-b[1]});var conn=kw>=50?(kw>=150?'CCS':'CCS'):('Type 2'),nconn=kw>=50?(1+ri(3)):(1+ri(4));out.push({id:'s'+(++idx),name:row[0]+' \u2014 '+LOC[i%LOC.length],city:row[1],lat:lat,lng:lng,kw:kw,status:st,conn:conn,nconn:nconn,ops:priced});}}return out;})();
+var N=STATIONS.length,prices=STATIONS.map(function(s){return s.ops.map(function(o){return[o[0],o[1]]})}),SMAP={};STATIONS.forEach(function(s,i){SMAP[s.id]=i;});
+
+/* ═══ VEHICLES ═══ */
+var VEHICLES=[
+  {id:'tmy',name:'Tesla Model Y',cap:60,max_ac:11,max_dc:250},
+  {id:'tm3',name:'Tesla Model 3',cap:57,max_ac:11,max_dc:250},
+  {id:'vwid4',name:'Volkswagen ID.4',cap:77,max_ac:11,max_dc:135},
+  {id:'vwid3',name:'Volkswagen ID.3',cap:58,max_ac:11,max_dc:120},
+  {id:'hi5',name:'Hyundai Ioniq 5',cap:73,max_ac:11,max_dc:220},
+  {id:'kev6',name:'Kia EV6',cap:77,max_ac:11,max_dc:240},
+  {id:'pol2',name:'Polestar 2',cap:69,max_ac:11,max_dc:155},
+  {id:'ix3',name:'BMW iX3',cap:74,max_ac:11,max_dc:150},
+  {id:'enyq',name:'Skoda Enyaq iV',cap:77,max_ac:11,max_dc:135},
+  {id:'mg4',name:'MG4 EV',cap:64,max_ac:11,max_dc:140},
+  {id:'pe208',name:'Peugeot e-208',cap:50,max_ac:11,max_dc:100},
+  {id:'rmeg',name:'Renault Megane E-Tech',cap:60,max_ac:22,max_dc:130},
+  {id:'cborn',name:'Cupra Born',cap:58,max_ac:11,max_dc:120},
+  {id:'mini',name:'Mini Electric',cap:36,max_ac:11,max_dc:50},
+  {id:'leaf',name:'Nissan Leaf',cap:40,max_ac:6.6,max_dc:50}
+];
+var selVehicle=VEHICLES[0],batFrom=20,batTo=80;
+function calcCharge(s,price){
+  var kwhNeeded=selVehicle.cap*(batTo-batFrom)/100;
+  var maxKw=s.kw>=50?Math.min(s.kw,selVehicle.max_dc):Math.min(s.kw,selVehicle.max_ac);
+  var hours=kwhNeeded/maxKw;
+  var totalCost=kwhNeeded*price;
+  var h=Math.floor(hours),m=Math.round((hours-h)*60);
+  return{kwh:Math.round(kwhNeeded*10)/10,time:(h>0?h+'u ':'')+(m<10?'0':'')+m+'m',hours:hours,cost:Math.round(totalCost*100)/100,maxKw:maxKw};
+}
+
+/* Price tick */
+setInterval(function(){var bs=Math.ceil(N*.12),off=Math.floor(Math.random()*N);for(var k=0;k<bs;k++){var i=(off+k)%N,ps=prices[i];for(var j=0;j<ps.length;j++)ps[j][1]=Math.min(.75,Math.max(.29,+(ps[j][1]+(Math.random()-.485)*.012).toFixed(3)));ps.sort(function(a,b){return a[1]-b[1]});if(Math.random()<.05)STATIONS[i].status=['VRIJ','VRIJ','VRIJ','VRIJ','BEZET','BEZET','STORING'][Math.floor(Math.random()*7)];}lastUp=Date.now();if(curPage==='dash')renderDash();if(curPage==='passen')renderPassen();},7000);
+
+/* ═══ TOAST ═══ */
+var tt;function showToast(m){var el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('show')},2600);}
+window.logClick=function(oid){showToast('Doorgestuurd naar '+(OPS[oid]?OPS[oid].name:oid));};
+
+/* ═══ MENU / OVERLAY ═══ */
+var menuEl=document.getElementById('menu'),ovlEl=document.getElementById('ovl'),fpEl=document.getElementById('fpanel'),sheetEl=document.getElementById('sheet');
+function closeAll(){menuEl.classList.remove('open');fpEl.classList.remove('open');sheetEl.classList.remove('open');ovlEl.classList.remove('v');}
+document.getElementById('menuBtn').addEventListener('click',function(){closeAll();menuEl.classList.add('open');ovlEl.classList.add('v');});
+document.getElementById('menuX').addEventListener('click',closeAll);
+document.getElementById('fpX').addEventListener('click',closeAll);
+document.getElementById('fpApply').addEventListener('click',function(){closeAll();showToast('Filters toegepast');});
+ovlEl.addEventListener('click',closeAll);
+document.getElementById('banner').addEventListener('click',function(){this.classList.add('hidden');});
+document.getElementById('qrBtn').addEventListener('click',function(){showToast('QR-scanner komt binnenkort')});
+document.getElementById('fBtn').addEventListener('click',function(){closeAll();fpEl.classList.add('open');ovlEl.classList.add('v');});
+document.getElementById('fabLoc').addEventListener('click',function(){if(!navigator.geolocation)return showToast('Locatie niet beschikbaar');navigator.geolocation.getCurrentPosition(function(p){if(map)map.setView([p.coords.latitude,p.coords.longitude],14);},function(){showToast('Locatie geweigerd')});});
+document.querySelectorAll('.fp-opts').forEach(function(g){g.addEventListener('click',function(e){var b=e.target.closest('.fp-opt');if(!b)return;g.querySelectorAll('.fp-opt').forEach(function(x){x.classList.remove('on')});b.classList.add('on');});});
+document.querySelectorAll('.tog').forEach(function(t){t.addEventListener('click',function(){t.classList.toggle('on');});});
+
+/* ═══ PAGE SWITCHING ═══ */
+var curPage='dash',mapInited=false;
+function switchPage(p){
+  curPage=p;closeAll();
+  document.querySelectorAll('.page').forEach(function(el){el.classList.remove('active')});
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.ntab').forEach(function(t){t.classList.toggle('active',t.dataset.p===p)});
+  if(p==='kaart'&&!mapInited){initMap();mapInited=true;}
+  if(p==='kaart'&&map){setTimeout(function(){map.invalidateSize()},150);}
+  if(p==='dash')renderDash();
+  if(p==='passen')renderPassen();
+}
+document.getElementById('nav').addEventListener('click',function(e){var b=e.target.closest('.ntab');if(!b)return;switchPage(b.dataset.p);});
+
+/* ═══ LOCATION PICKER ═══ */
+var REGIONS=[{key:'hgv',name:'Hoogeveen',sub:'Drenthe',lat:52.724,lng:6.479,group:'noord'},{key:'ams',name:'Amsterdam',sub:'Noord-Holland',lat:52.370,lng:4.895,group:'populair'},{key:'rtm',name:'Rotterdam',sub:'Zuid-Holland',lat:51.922,lng:4.479,group:'populair'},{key:'utr',name:'Utrecht',sub:'Utrecht',lat:52.092,lng:5.104,group:'populair'},{key:'ehe',name:'Eindhoven',sub:'Noord-Brabant',lat:51.441,lng:5.479,group:'populair'},{key:'grn',name:'Groningen',sub:'Groningen',lat:53.219,lng:6.566,group:'noord'},{key:'zwo',name:'Zwolle',sub:'Overijssel',lat:52.517,lng:6.083,group:'oost'},{key:'arn',name:'Arnhem',sub:'Gelderland',lat:51.985,lng:5.898,group:'oost'},{key:'hag',name:'Den Haag',sub:'Zuid-Holland',lat:52.077,lng:4.308,group:'west'},{key:'maa',name:'Maastricht',sub:'Limburg',lat:50.851,lng:5.691,group:'zuid'},{key:'lee',name:'Leeuwarden',sub:'Friesland',lat:53.202,lng:5.800,group:'noord'},{key:'emm',name:'Emmen',sub:'Drenthe',lat:52.783,lng:6.900,group:'noord'},{key:'ass',name:'Assen',sub:'Drenthe',lat:52.993,lng:6.563,group:'noord'},{key:'ens',name:'Enschede',sub:'Overijssel',lat:52.219,lng:6.896,group:'oost'},{key:'bre',name:'Breda',sub:'Noord-Brabant',lat:51.589,lng:4.775,group:'zuid'},{key:'til',name:'Tilburg',sub:'Noord-Brabant',lat:51.561,lng:5.083,group:'zuid'}];
+var GL={'populair':'Populair','noord':'Noord-Nederland','oost':'Oost-Nederland','west':'West-Nederland','zuid':'Zuid-Nederland'};
+var selectedRegion=REGIONS[0],locQ='';
+function renderLocList(){var q=locQ,filtered=REGIONS.filter(function(r){return!q||r.name.toLowerCase().indexOf(q)>=0||r.sub.toLowerCase().indexOf(q)>=0}),groups={};filtered.forEach(function(r){if(!groups[r.group])groups[r.group]=[];groups[r.group].push(r);});var h='';for(var g in groups){h+='<div class="loc-group-lbl">'+(GL[g]||g)+'</div>';groups[g].forEach(function(r){var sel=selectedRegion&&selectedRegion.key===r.key;h+='<div class="loc-opt'+(sel?' selected':'')+'" onclick="selectRegion(\''+r.key+'\')"><div><div class="loc-opt-name">'+r.name+'</div><div class="loc-opt-sub">'+r.sub+'</div></div><div class="loc-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div></div>';});}document.getElementById('loc-list').innerHTML=h||'<div style="text-align:center;padding:24px;color:var(--ink3);font-size:.82rem">Geen resultaten</div>';}
+function selectRegion(key){selectedRegion=REGIONS.find(function(r){return r.key===key})||selectedRegion;renderLocList();}
+function openLocPicker(){locQ='';var inp=document.getElementById('loc-inp');if(inp){inp.value='';inp.oninput=function(e){locQ=e.target.value.toLowerCase();renderLocList();};}renderLocList();document.getElementById('loc-modal').classList.add('show');}
+function confirmLocation(){document.getElementById('loc-modal').classList.remove('show');userLat=selectedRegion.lat;userLng=selectedRegion.lng;document.getElementById('regio-name').textContent=selectedRegion.name;document.getElementById('regio-sub').textContent=selectedRegion.sub;document.getElementById('top5-city').textContent=selectedRegion.name;renderDash();showToast('Regio: '+selectedRegion.name);}
+
+/* ═══ DASHBOARD ═══ */
+function getBestUserPass(i){var ps=prices[i],best=null;for(var j=0;j<ps.length;j++){if(USER_PASSES.indexOf(ps[j][0])>=0){if(!best||ps[j][1]<best[1])best=ps[j];}}return best;}
+function buildCard(s,i,rank,dark){
+  var ch=prices[i][0],ps=prices[i],myBest=getBestUserPass(i);
+  var myTag=myBest?'<span class="sc-pass">Jouw pas: '+OPS[myBest[0]].name+' '+fmt(myBest[1])+'</span>':'';
+  if(rank===1){var kwL=s.kw>=150?fmtKW(s.kw)+' DC':'AC '+fmtKW(s.kw),dotC=s.status==='VRIJ'?'v':s.status==='BEZET'?'b':'s',pi=myBest?'<div class="sh-pass-tag">Jouw beste pas: '+OPS[myBest[0]].name+' \u2014 '+fmt(myBest[1])+'/kWh</div>':'',cls=dark?'sc-hero dark':'sc-hero',bdg=dark?'Goedkoopst NL':'Beste deal';return'<div class="'+cls+'" onclick="openDashSheet(\''+s.id+'\')"><div class="sc-hero-body"><div class="sh-top-row"><span class="sh-badge">'+bdg+'</span><span class="sh-status"><span class="sh-dot '+dotC+'"></span>'+s.status+'</span></div><div class="sh-name">'+s.name+'</div><div class="sh-loc">'+s.city+' \u00b7 '+fmtDist(haversine(userLat,userLng,s.lat,s.lng))+'</div><div class="sh-price-block"><div><div class="sh-price-label">Prijs per kWh</div><div class="sh-price-val">'+fmt(ch[1])+'<span class="sh-price-unit">/kWh</span></div></div><div class="sh-kw-tag">'+kwL+'</div></div>'+pi+'<div class="sh-prov-strip">'+ps.map(function(p,j){return(j>0?'<span class="sh-prov-sep">\u00b7</span>':'')+'<span class="sh-prov-name">'+OPS[p[0]].name+'</span>'}).join('')+'</div></div></div>';}
+  var stC=s.status==='VRIJ'?'sc-v':s.status==='BEZET'?'sc-b':'sc-s',dist=fmtDist(haversine(userLat,userLng,s.lat,s.lng));
+  return'<div class="sc-list" onclick="openDashSheet(\''+s.id+'\')"><div class="sc-row"><span class="sc-n">'+rank+'</span><div class="sc-mid"><div class="sc-title">'+s.name+'</div><div class="sc-info"><span>'+s.city+'</span><span class="sc-sep">\u00b7</span><span>'+fmtKW(s.kw)+'</span><span class="sc-sep">\u00b7</span><span class="'+stC+'">'+s.status+'</span><span class="sc-sep">\u00b7</span><span>'+dist+'</span></div>'+myTag+'</div><div class="sc-p"><div class="sc-price">'+fmt(ch[1])+'</div><span class="sc-per">/kWh</span></div></div></div>';
+}
+function buildCompareCard(){var nearest=null,nd=999999;for(var i=0;i<N;i++){var d=haversine(userLat,userLng,STATIONS[i].lat,STATIONS[i].lng);if(d<nd){nd=d;nearest=i;}}if(nearest===null)return'';var s=STATIONS[nearest],ps=prices[nearest],mp=[];for(var j=0;j<ps.length;j++){if(USER_PASSES.indexOf(ps[j][0])>=0)mp.push(ps[j]);}if(mp.length<2)return'';mp.sort(function(a,b){return a[1]-b[1]});var best=mp[0],worst=mp[mp.length-1],diff=+(worst[1]-best[1]).toFixed(2),s50=+(diff*50).toFixed(2);
+  var h='<div style="padding:14px 14px 10px"><div style="font-size:.84rem;font-weight:700;color:var(--ink);margin-bottom:1px">'+s.name.split(',')[0]+'</div><div style="font-size:.6rem;color:var(--ink3);margin-bottom:10px">'+s.city+' \u00b7 '+fmtKW(s.kw)+' \u00b7 '+fmtDist(nd)+'</div>';
+  for(var k=0;k<mp.length;k++){var p=mp[k],op=OPS[p[0]];if(k===0)h+='<div style="display:flex;align-items:center;padding:10px 12px;background:var(--acc-bg);border:1px solid rgba(29,184,126,.15);border-radius:10px;margin-bottom:6px"><div style="width:22px;height:22px;border-radius:6px;background:var(--acc);color:#fff;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px">1</div><span style="flex:1;font-size:.8rem;font-weight:700;color:var(--ink)">'+op.name+'</span><span style="font-size:.95rem;font-weight:800;color:var(--acc)">'+fmt(p[1])+'</span><span style="font-size:.5rem;color:var(--ink3);margin-left:2px">/kWh</span></div>';
+  else h+='<div style="display:flex;align-items:center;padding:9px 12px;background:var(--bg);border-radius:10px;margin-bottom:4px"><div style="width:22px;height:22px;border-radius:6px;background:var(--bg2);color:var(--ink3);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px">'+(k+1)+'</div><span style="flex:1;font-size:.78rem;font-weight:600;color:var(--ink2)">'+op.name+'</span><span style="font-size:.88rem;font-weight:700;color:var(--ink2)">'+fmt(p[1])+'</span><span style="font-size:.5rem;color:var(--ink3);margin-left:2px">/kWh</span></div>';}
+  h+='</div>';if(diff>=.04)h+='<div style="display:flex;border-top:1px solid var(--line2)"><div style="flex:1;padding:11px 14px;background:var(--acc);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer" onclick="openDashSheet(\''+s.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" width="13" height="13"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span style="font-size:.7rem;font-weight:700;color:#fff">'+OPS[best[0]].name+' \u2014 bespaar '+fmt(s50)+'</span></div><a href="https://www.google.com/maps/dir/?api=1&destination='+s.lat+','+s.lng+'" target="_blank" style="padding:11px 14px;background:var(--bg);display:flex;align-items:center;gap:5px;text-decoration:none;border-left:1px solid var(--line2)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink2)" stroke-width="2" width="13" height="13"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span style="font-size:.66rem;font-weight:600;color:var(--ink2)">Route</span></a></div>';return h;}
+function renderDash(){var cmp=document.getElementById('dash-compare');if(cmp)cmp.innerHTML=buildCompareCard();var nearby=STATIONS.map(function(s,i){return{s:s,i:i,p:prices[i][0][1],dist:haversine(userLat,userLng,s.lat,s.lng)}}).filter(function(x){return x.dist<=2}).sort(function(a,b){return a.p-b.p}).slice(0,5);var t5=document.getElementById('dash-top5');if(t5)t5.innerHTML=nearby.map(function(x,k){return buildCard(x.s,x.i,k+1,false)}).join('');var sorted=STATIONS.map(function(s,i){return{s:s,i:i,p:prices[i][0][1]}}).sort(function(a,b){return a.p-b.p}).slice(0,50);var al=document.getElementById('dash-all');if(al)al.innerHTML=sorted.map(function(x,k){return buildCard(x.s,x.i,k+1,true)}).join('');}
+function buildSheetHTML(s,i,showDist){
+  var ps=prices[i],cp=ps[0][1],mp=ps[ps.length-1][1],df=+(mp-cp).toFixed(2);
+  var dist=haversine(userLat,userLng,s.lat,s.lng),mu='https://www.google.com/maps/dir/?api=1&destination='+s.lat+','+s.lng;
+  var ci=calcCharge(s,cp);
+  var h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div style="font-size:.72rem;font-weight:800;color:var(--ink)">Fair<span style="color:var(--acc)">Plug</span></div><div style="font-size:.6rem;color:var(--ink3)">Prijsvergelijker</div></div>';
+  // Station header
+  h+='<div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="sh-name-dk">'+s.name+'</div><div class="sh-city">'+s.city+(showDist?' \u00b7 '+fmtDist(dist):'')+'</div></div><a href="'+mu+'" target="_blank" style="width:32px;height:32px;border-radius:8px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></a></div>';
+  h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">'+statusBadge(s)+(s.kw>=50?'<span class="badge bb">'+fmtKW(s.kw)+' DC</span>':'<span class="badge bgr">AC '+fmtKW(s.kw)+'</span>')+'</div>';
+  // Stekker info
+  h+='<div class="sh-stekker"><div class="sh-stk-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>'+fmtKW(s.kw)+' '+s.conn+' \u00b7 '+s.nconn+'x</div></div></div>';
+  // Warning banner
+  if(df>=.10)h+='<div class="sh-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg><div class="sh-banner-txt">Tot <strong>'+fmt(df)+'/kWh</strong> verschil \u2014 bij '+ci.kwh+' kWh scheelt dit <strong>'+fmt(df*ci.kwh)+'</strong>!</div></div>';
+  // Start button
+  var bo=OPS[ps[0][0]];h+='<a class="start-btn" href="'+(bo?bo.url:'#')+'" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Start laden via '+(bo?bo.name:'')+' \u2014 '+fmt(cp)+'/kWh</a>';
+  // Vehicle & battery config
+  h+='<div class="sh-config"><div class="sh-config-title">Mijn lading</div>';
+  h+='<div class="sh-config-row"><span class="sh-config-lbl">Voertuig</span></div>';
+  h+='<select class="sh-vehicle-sel" id="shVehicle" onchange="onVehicleChange(this.value,\''+s.id+'\')">';
+  for(var v=0;v<VEHICLES.length;v++){h+='<option value="'+v+'"'+(VEHICLES[v].id===selVehicle.id?' selected':'')+'>'+VEHICLES[v].name+' ('+VEHICLES[v].cap+' kWh)</option>';}
+  h+='</select>';
+  h+='<div class="sh-bat-wrap"><div class="sh-config-row"><span class="sh-config-lbl">Accubereik</span><span class="sh-config-val" id="shBatVal">'+batFrom+'% \u2192 '+batTo+'%</span></div>';
+  h+='<div class="sh-bat-row"><span class="sh-bat-lbl" id="shBatFromLbl">'+batFrom+'%</span><input type="range" class="sh-bat-slider" id="shBatFrom" min="5" max="90" step="5" value="'+batFrom+'" oninput="onBatChange(\''+s.id+'\')" /><span class="sh-bat-lbl" id="shBatToLbl">'+batTo+'%</span><input type="range" class="sh-bat-slider" id="shBatTo" min="10" max="100" step="5" value="'+batTo+'" oninput="onBatChange(\''+s.id+'\')" /></div></div></div>';
+  // Estimates
+  h+='<div class="sh-est" id="shEst"><div class="sh-est-item"><div class="sh-est-v">'+ci.kwh+' kWh</div><div class="sh-est-l">Energie</div></div><div class="sh-est-item"><div class="sh-est-v">'+ci.time+'</div><div class="sh-est-l">Laadduur</div></div><div class="sh-est-item"><div class="sh-est-v green">'+fmt(ci.cost)+'</div><div class="sh-est-l">Totale kosten</div></div><div class="sh-est-item"><div class="sh-est-v">'+ci.maxKw+' kW</div><div class="sh-est-l">Max. vermogen</div></div></div>';
+  // Tariff details for cheapest
+  h+='<div class="sh-tariff"><div class="sh-tariff-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Energiekosten \u2014 '+(bo?bo.name:'')+'</div>';
+  h+='<div class="sh-tariff-row"><span class="lbl">Tarief per kWh</span><span class="val">'+fmt(cp)+'</span></div>';
+  h+='<div class="sh-tariff-row"><span class="lbl">Energie ('+ci.kwh+' kWh)</span><span class="val green">'+fmt(ci.cost)+'</span></div>';
+  h+='<div class="sh-tariff-row"><span class="lbl">Starttarief</span><span class="val">\u20ac 0,00</span></div>';
+  h+='<div class="sh-tariff-row"><span class="lbl">Gem. prijs/kWh</span><span class="val green">'+fmt(cp)+'</span></div></div>';
+  // All providers
+  h+='<div class="divider"></div><div class="sec-lbl" style="margin-bottom:10px">Alle aanbieders</div>';
+  for(var j=0;j<ps.length;j++){
+    var oid=ps[j][0],price=ps[j][1],op=OPS[oid];if(!op)continue;
+    var d=+(price-cp).toFixed(2),best=j===0,isMine=USER_PASSES.indexOf(oid)>=0;
+    var ml=isMine?'<span class="pr-my-tag">Mijn pas</span>':'';
+    var pc=calcCharge(s,price);
+    h+='<div class="pr'+(best?' pr-best':'')+'"><div class="pr-main"><div class="pr-rk'+(best?' r1':j<4?' r-mid':' r-exp')+'">'+(j+1)+'</div><div class="pr-info"><div class="pr-nm">'+op.name+(best?'<span class="pr-cheap-tag">Goedkoopst</span>':'')+ml+'</div><div class="pr-df'+(best?' ch':'')+'">'+(best?'Beste keuze voor deze paal':'+ '+fmt(d)+' per kWh')+'</div><div class="pr-total">Totaal: <strong>'+fmt(pc.cost)+'</strong> voor '+ci.kwh+' kWh \u00b7 '+pc.time+'</div></div><div class="pr-price-col"><div class="pr-price">'+fmt(price)+'</div><span class="pr-pu">/kWh</span></div></div>';
+    h+='<a class="ref-btn" href="'+op.url+'" target="_blank"><span>Ga naar '+op.name+'</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></a></div>';
+  }
+  // Report button
+  h+='<button class="sh-report" onclick="showToast(\'Bedankt! We controleren de prijs.\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Onjuiste prijs melden</button>';
+  return h;
+}
+function onVehicleChange(idx,sid){selVehicle=VEHICLES[parseInt(idx)];refreshSheet(sid);}
+function onBatChange(sid){
+  var f=document.getElementById('shBatFrom'),t=document.getElementById('shBatTo');
+  batFrom=parseInt(f.value);batTo=parseInt(t.value);
+  if(batTo<=batFrom)batTo=Math.min(100,batFrom+10);
+  t.value=batTo;
+  document.getElementById('shBatFromLbl').textContent=batFrom+'%';
+  document.getElementById('shBatToLbl').textContent=batTo+'%';
+  document.getElementById('shBatVal').textContent=batFrom+'% \u2192 '+batTo+'%';
+  refreshSheet(sid);
+}
+function refreshSheet(sid){
+  var i=SMAP[sid];if(i===undefined)return;
+  var s=STATIONS[i];
+  document.getElementById('sbc').innerHTML=buildSheetHTML(s,i,true);
+  sheetEl.scrollTop=sheetEl.scrollTop;
+}
+function openDashSheet(id){var i=SMAP[id];if(i===undefined)return;var s=STATIONS[i];
+  document.getElementById('sbc').innerHTML=buildSheetHTML(s,i,true);closeAll();sheetEl.classList.add('open');ovlEl.classList.add('v');sheetEl.scrollTop=0;}
+function searchPole(){var q=document.getElementById('pole-inp').value.trim().toLowerCase();if(q.length<2){showToast('Typ minimaal 2 tekens');return;}for(var i=0;i<N;i++){if(STATIONS[i].name.toLowerCase().indexOf(q)>=0){openDashSheet(STATIONS[i].id);return;}}showToast('Geen paal gevonden');}
+document.getElementById('pole-inp').addEventListener('keydown',function(e){if(e.key==='Enter')searchPole();});
+
+/* ═══ KAART ═══ */
+var map=null,cluster=null,mkrs=[],curF='alle';
+document.getElementById('filterPill').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;document.querySelectorAll('.fpill button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');curF=b.dataset.f;doFilter();});
+function doFilter(){if(!cluster)return;cluster.clearLayers();mkrs.forEach(function(o){if(curF==='alle'||(curF==='snel'&&STATIONS[o.i].kw>=50))cluster.addLayer(o.m);});}
+function initMap(){
+  var el=document.getElementById('map');map=L.map(el,{zoomControl:false}).setView([52.20,5.30],8);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:20}).addTo(map);
+  setTimeout(function(){map.invalidateSize()},200);
+  cluster=L.markerClusterGroup({maxClusterRadius:60,chunkedLoading:true,iconCreateFunction:function(c){var n=c.getChildCount(),sz=n<20?36:n<100?42:n<500?48:54;return L.divIcon({html:'<div style="width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:#1db87e;color:#fff;font-weight:700;font-size:'+(sz<42?11:10)+'px;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(29,184,126,.35)">'+n.toLocaleString()+'</div>',className:'fp-cluster',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});}});
+  var ren=L.canvas({padding:.5}),off=0;
+  function chunk(){var end=Math.min(off+600,N);for(var i=off;i<end;i++){(function(idx){var s=STATIONS[idx],r=s.kw>=150?8:s.kw>=50?6:4;var col=stColor(s),ic=L.divIcon({html:'<div style="width:'+r*2.5+'px;height:'+r*2.5+'px;border-radius:50%;background:'+col+';color:#fff;font-size:'+(r<5?'7':'8')+'px;font-weight:700;font-family:var(--f);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.85);box-shadow:0 1px 4px rgba(0,0,0,.15);line-height:1">'+s.kw+'</div>',className:'',iconSize:[r*2.5,r*2.5],iconAnchor:[r*1.25,r*1.25]});var m=L.marker([s.lat,s.lng],{icon:ic});m.bindPopup(function(){var s2=STATIONS[idx],ps=prices[idx],c=ps[0],cl=s2.status==='VRIJ'?'bg':s2.status==='BEZET'?'ba':'br';return'<div class="pp"><div class="pp-tag">FairPlug</div><div class="pp-name">'+s2.name+'</div><div class="pp-city">'+s2.city+' \u00b7 '+fmtKW(s2.kw)+'</div><div class="pp-row"><div class="pp-price">'+fmt(c[1])+'<span class="pp-unit"> /kWh</span></div><span class="badge '+cl+'" style="font-size:.56rem;padding:2px 7px">'+s2.status+'</span></div><button class="pp-btn" onclick="openMapSheet(\''+s2.id+'\')">Bekijk '+ps.length+' aanbieders</button></div>';},{maxWidth:260,closeButton:true});mkrs.push({m:m,i:idx});})(i);}off=end;if(off<N)requestAnimationFrame(chunk);else doFilter();}
+  map.addLayer(cluster);requestAnimationFrame(chunk);
+}
+/* Map search */
+var sinp=document.getElementById('sinp'),sres=document.getElementById('sres'),sto;
+sinp.addEventListener('input',function(){clearTimeout(sto);sto=setTimeout(doMapSearch,180);});
+document.addEventListener('click',function(e){if(!e.target.closest('#bottom'))sres.classList.remove('show');});
+function doMapSearch(){var q=sinp.value.trim().toLowerCase();if(q.length<2){sres.classList.remove('show');return;}var seen={},ci=[],st=[];for(var i=0;i<N;i++){var s=STATIONS[i],cl=s.city.toLowerCase();if(cl.indexOf(q)>=0&&!seen[cl]){seen[cl]=1;ci.push({city:s.city,lat:s.lat,lng:s.lng});}if(s.name.toLowerCase().indexOf(q)>=0)st.push({name:s.name,city:s.city,id:s.id});}var res=ci.slice(0,3).concat(st.slice(0,5));if(!res.length){sres.innerHTML='<div style="padding:14px;text-align:center;font-size:.78rem;color:var(--ink3)">Geen resultaten</div>';sres.classList.add('show');return;}sres.innerHTML=res.map(function(r){return r.id?'<div class="sr" data-a="s" data-id="'+r.id+'"><div class="sr-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div><div class="sr-t">'+r.name+'</div><div class="sr-s">'+r.city+'</div></div></div>':'<div class="sr" data-a="c" data-lat="'+r.lat+'" data-lng="'+r.lng+'" data-n="'+r.city+'"><div class="sr-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div><div class="sr-t">'+r.city+'</div><div class="sr-s">Stad</div></div></div>';}).join('');sres.classList.add('show');}
+sres.addEventListener('click',function(e){var el=e.target.closest('.sr');if(!el)return;sres.classList.remove('show');if(el.dataset.a==='c'){sinp.value=el.dataset.n;if(map)map.setView([+el.dataset.lat,+el.dataset.lng],13);}else{var id=el.dataset.id,i=SMAP[id];if(i===undefined)return;sinp.value=STATIONS[i].name;if(map){map.setView([STATIONS[i].lat,STATIONS[i].lng],16);setTimeout(function(){openMapSheet(id)},400);}}});
+function openMapSheet(id){closeAll();if(map)map.closePopup();var i=SMAP[id];if(i===undefined)return;var s=STATIONS[i];
+  document.getElementById('sbc').innerHTML=buildSheetHTML(s,i,false);sheetEl.classList.add('open');ovlEl.classList.add('v');sheetEl.scrollTop=0;}
+
+/* ═══ DEMO: SPLASH + ONBOARDING ═══ */
+var obMap=null;
+function initObMap(){
+  var el=document.getElementById('obmap');if(!el||obMap)return;
+  obMap=L.map(el,{zoomControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false,boxZoom:false,keyboard:false}).setView([userLat+.004,userLng],13);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:20}).addTo(obMap);
+  var nearby=STATIONS.map(function(s,i){return{s:s,i:i,d:haversine(userLat,userLng,s.lat,s.lng)}}).sort(function(a,b){return a.d-b.d}).slice(0,7);
+  var cheapest=nearby.slice().sort(function(a,b){return prices[a.i][0][1]-prices[b.i][0][1]})[0];
+  nearby.forEach(function(x){
+    var p=prices[x.i][0][1],best=cheapest&&x.i===cheapest.i;
+    var html=best
+      ?'<div style="background:#1db87e;color:#fff;border-radius:10px;padding:5px 10px;font-family:var(--f);font-weight:800;font-size:12px;letter-spacing:-.02em;box-shadow:0 4px 12px rgba(29,184,126,.45);white-space:nowrap;border:2px solid rgba(255,255,255,.9)">'+fmt(p)+'<span style="font-weight:500;font-size:9px;opacity:.8"> /kWh</span></div>'
+      :'<div style="background:#fff;color:#0d0f12;border-radius:10px;padding:5px 10px;font-family:var(--f);font-weight:800;font-size:12px;letter-spacing:-.02em;box-shadow:0 4px 12px rgba(0,0,0,.18);white-space:nowrap">'+fmt(p)+'<span style="font-weight:500;font-size:9px;color:#8590a2"> /kWh</span></div>';
+    L.marker([x.s.lat,x.s.lng],{icon:L.divIcon({html:html,className:'',iconSize:null,iconAnchor:[30,14]}),interactive:false}).addTo(obMap);
+  });
+  setTimeout(function(){obMap.invalidateSize()},200);
+}
+function dismissOnboard(msg){
+  var ob=document.getElementById('onboard');ob.classList.add('hide');
+  setTimeout(function(){ob.style.display='none';},450);
+  if(msg)showToast(msg);
+}
+setTimeout(function(){
+  var sp=document.getElementById('splash');sp.classList.add('hide');
+  setTimeout(function(){sp.style.display='none';},500);
+},1600);
+
+/* ═══ PASSEN ═══ */
+function renderPassen(){
+  var el=document.getElementById('passen-scroll');if(!el)return;
+  var nearest=null,nd=1e9;for(var i=0;i<N;i++){var d=haversine(userLat,userLng,STATIONS[i].lat,STATIONS[i].lng);if(d<nd){nd=d;nearest=i;}}
+  if(nearest===null)return;
+  var s=STATIONS[nearest],ps=prices[nearest],mine=[];
+  for(var j=0;j<ps.length;j++){if(USER_PASSES.indexOf(ps[j][0])>=0)mine.push(ps[j]);}
+  mine.sort(function(a,b){return a[1]-b[1]});
+  var h='<div class="sec-row"><span class="sec-lbl">Mijn laadpassen</span><span class="sec-tag">'+mine.length+' passen geldig bij deze paal</span></div>';
+  if(mine.length){
+    var best=mine[0],kwL=s.kw>=50?fmtKW(s.kw)+' DC':'AC '+fmtKW(s.kw);
+    var dotC=s.status==='VRIJ'?'v':s.status==='BEZET'?'b':'s';
+    h+='<div class="sc-hero" onclick="openDashSheet(\''+s.id+'\')"><div class="sc-hero-body">'
+      +'<div class="sh-top-row"><span class="sh-badge">Beste pas bij deze paal</span><span class="sh-status"><span class="sh-dot '+dotC+'"></span>'+s.status+'</span></div>'
+      +'<div class="sh-name">'+OPS[best[0]].name+'</div>'
+      +'<div class="sh-loc">'+s.name+' · '+kwL+' · '+fmtDist(nd)+'</div>'
+      +'<div class="sh-price-block"><div><div class="sh-price-label">Jouw prijs met deze pas</div><div class="sh-price-val">'+fmt(best[1])+'<span class="sh-price-unit">/kWh</span></div></div><div class="sh-kw-tag">Scan & laad</div></div>'
+      +'</div></div>';
+    for(var k=0;k<mine.length;k++){
+      var p=mine[k],op=OPS[p[0]],d2=+(p[1]-mine[0][1]).toFixed(2),b=k===0;
+      h+='<div class="pr'+(b?' pr-best':'')+'"><div class="pr-main"><div class="pr-rk'+(b?' r1':'')+'">'+(k+1)+'</div><div class="pr-info"><div class="pr-nm">'+op.name+(b?'<span class="pr-cheap-tag">Goedkoopst</span>':'')+'</div><div class="pr-df'+(b?' ch':'')+'">'+(b?'Beste keuze bij deze paal':'+ '+fmt(d2)+' per kWh')+'</div></div><div class="pr-price-col"><div class="pr-price">'+fmt(p[1])+'</div><span class="pr-pu">/kWh</span></div></div></div>';
+    }
+  }else{
+    h+='<div class="card"><h3>Geen van je passen geldig hier</h3><p>Bekijk alle aanbieders bij deze paal via het dashboard.</p></div>';
+  }
+  h+='<div class="pas-add" style="background:var(--surface);border-radius:12px;border:1.6px dashed #c3ccd7;margin-top:2px" onclick="showToast(\'Laadpas toevoegen komt binnenkort\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Laadpas toevoegen</div>';
+  h+='<div class="sec-row" style="margin-top:14px"><span class="sec-lbl">Al mijn passen</span></div>';
+  h+='<div class="pas-card">'
+    +'<div class="pas-row"><div class="pas-dot" style="background:var(--acc)"></div><div class="pas-name">ANWB Energie</div><span class="pas-status" style="background:var(--acc-bg);color:var(--acc)">Actief</span></div>'
+    +'<div class="pas-row"><div class="pas-dot" style="background:var(--acc)"></div><div class="pas-name">E-flux</div><span class="pas-status" style="background:var(--acc-bg);color:var(--acc)">Actief</span></div>'
+    +'<div class="pas-row"><div class="pas-dot" style="background:var(--acc)"></div><div class="pas-name">Shell Recharge</div><span class="pas-status" style="background:var(--acc-bg);color:var(--acc)">Actief</span></div>'
+    +'<div class="pas-row"><div class="pas-dot" style="background:var(--ink3)"></div><div class="pas-name">Vattenfall</div><span class="pas-status" style="background:var(--bg);color:var(--ink3)">Inactief</span></div>'
+    +'</div>';
+  el.innerHTML=h;
+}
+
+/* ═══ OVER ONS CALC ═══ */
+var kmS=document.getElementById('kmSlider'),kwhS=document.getElementById('kwhSlider');
+function calcOver(){var km=parseInt(kmS.value),kwh=parseInt(kwhS.value);document.getElementById('kmVal').textContent=km.toLocaleString('nl-NL')+' km';document.getElementById('kwhVal').textContent=kwh+' kWh';var diff=0.14,pb=Math.round(kwh*diff*100)/100,pj=Math.min(1500,Math.round(km*0.18*diff)),pm=Math.round(pj/12);document.getElementById('cLaad').textContent='\u20ac '+pb.toFixed(2).replace('.',',');document.getElementById('cMaand').textContent='\u20ac '+pm;document.getElementById('cJaar').textContent='\u20ac '+pj;}
+kmS.addEventListener('input',calcOver);kwhS.addEventListener('input',calcOver);calcOver();
+var provsOpen=false;function toggleProvs(){provsOpen=!provsOpen;document.getElementById('provs-extra').classList.toggle('show',provsOpen);document.getElementById('provsMore').textContent=provsOpen?'Minder tonen':'+ 9 meer aanbieders';}
+
+/* ═══ ENG TIMER ═══ */
+var lastUp=Date.now();
+setInterval(function(){var s=Math.round((Date.now()-lastUp)/1000);var el=document.getElementById('eng-timer');if(el)el.textContent=s<5?'Nu bijgewerkt':s+'s geleden';},1000);
+
+/* Close loc-modal on Escape */
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    document.getElementById('loc-modal').classList.remove('show');
+    closeAll();
+  }
+});
+
+/* Map search focus */
+var sinpEl=document.getElementById('sinp');
+if(sinpEl)sinpEl.addEventListener('focus',function(){if(sinpEl.value.length>=2)doMapSearch();});
+
+/* ═══ INIT ═══ */
+document.addEventListener('DOMContentLoaded',function(){
+  initObMap();
+  var hash=window.location.hash.replace('#','');
+  if(hash==='demo-sheet'){
+    renderDash();
+    setTimeout(function(){
+      var nearby=STATIONS.map(function(s,i){return{s:s,i:i,dist:haversine(userLat,userLng,s.lat,s.lng)}}).sort(function(a,b){return a.dist-b.dist});
+      if(nearby.length)openDashSheet(nearby[0].s.id);
+    },300);
+  } else if(hash&&document.getElementById('page-'+hash)){switchPage(hash);}
+  else{renderDash();}
+});
+</script>
+
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+</script>
+</body>
+</html>
