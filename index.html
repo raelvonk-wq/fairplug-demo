@@ -275,27 +275,32 @@ body{background:#e0e3e8;display:flex;justify-content:center;min-height:100vh;}
 .ob-legal{text-align:center;color:#aab2bf;font-size:.58rem;line-height:1.5;margin-top:12px;}
 .ob-legal u{text-decoration:none;color:var(--ink3);}
 
-/* ═══ DEMO: 3D LAADPAS ═══ */
-.pas3d-wrap{perspective:900px;margin-bottom:12px;}
-.pas3d{position:relative;border-radius:16px;padding:16px;min-height:182px;background:linear-gradient(135deg,#141f2b 0%,#263a4c 55%,#1c2e3d 100%);color:#fff;transform-style:preserve-3d;animation:pasfloat 7s ease-in-out infinite;box-shadow:0 20px 34px -12px rgba(10,22,32,.5),0 6px 14px rgba(10,22,32,.25);overflow:hidden;cursor:pointer;display:flex;flex-direction:column;}
-.pas3d::before{content:'';position:absolute;inset:-20%;background:linear-gradient(115deg,rgba(255,255,255,0) 32%,rgba(255,255,255,.09) 47%,rgba(255,255,255,0) 62%);animation:passhine 7s ease-in-out infinite;pointer-events:none;}
-.pas3d::after{content:'';position:absolute;top:-70px;right:-70px;width:200px;height:200px;border-radius:50%;background:rgba(29,184,126,.13);pointer-events:none;}
-@keyframes pasfloat{0%,100%{transform:rotateX(7deg) rotateY(-8deg)}50%{transform:rotateX(-4deg) rotateY(8deg)}}
-@keyframes passhine{0%,100%{transform:translateX(-24%)}50%{transform:translateX(24%)}}
-@media (prefers-reduced-motion: reduce){.pas3d,.pas3d::before{animation:none;}}
-.pas3d-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:2;}
-.pas3d-brand{font-size:.98rem;font-weight:800;letter-spacing:-.02em;color:#fff;}
+/* ═══ DEMO: 3D LAADPAS (SmartPass) ═══ */
+.pas3d-wrap{perspective:1000px;margin-bottom:12px;}
+.pas3d-float{animation:pasfloat 7s ease-in-out infinite;transform-style:preserve-3d;}
+@keyframes pasfloat{0%,100%{transform:rotateX(5deg) rotateY(-6deg)}50%{transform:rotateX(-3deg) rotateY(6deg)}}
+@media (prefers-reduced-motion: reduce){.pas3d-float{animation:none;}}
+.pas3d-flip{position:relative;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,.7,.3,1);min-height:188px;cursor:pointer;}
+.pas3d-flip.flipped{transform:rotateY(180deg);}
+.pas3d-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:#fff;border-radius:16px;box-shadow:0 20px 34px -14px rgba(10,22,32,.32),0 6px 14px rgba(10,22,32,.12);overflow:hidden;display:flex;flex-direction:column;padding:15px 16px 14px 26px;}
+.pas3d-face::before{content:'';position:absolute;left:0;top:0;bottom:0;width:10px;background:var(--acc);}
+.pas3d-face.back{transform:rotateY(180deg);align-items:center;justify-content:center;}
+.pas3d-brand{font-size:1.08rem;font-weight:800;letter-spacing:-.03em;color:#13202e;}
 .pas3d-brand i{color:var(--acc);font-style:normal;}
-.pas3d-nfc{width:20px;height:20px;color:rgba(255,255,255,.6);transform:rotate(90deg);}
-.pas3d-chiprow{display:flex;align-items:center;gap:11px;margin:14px 0 4px;position:relative;z-index:2;}
-.pas3d-chip{width:36px;height:26px;border-radius:6px;background:linear-gradient(135deg,#f3d98a,#d9ab4f);position:relative;flex-shrink:0;}
-.pas3d-chip::before{content:'';position:absolute;inset:5px 7px;border:1px solid rgba(90,62,10,.4);border-radius:3px;}
-.pas3d-num{font-size:.64rem;color:rgba(255,255,255,.55);letter-spacing:.16em;font-weight:500;}
-.pas3d-bottom{position:relative;z-index:2;margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;gap:10px;}
-.pas3d-sub{font-size:.5rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5);margin-bottom:3px;}
-.pas3d-name{font-size:1.02rem;font-weight:800;letter-spacing:-.02em;}
-.pas3d-price{font-size:1.35rem;font-weight:800;letter-spacing:-.04em;color:var(--acc);line-height:1;}
-.pas3d-where{font-size:.52rem;color:rgba(255,255,255,.5);margin-top:3px;max-width:140px;text-align:right;}
+.pas3d-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.pas3d-live-lbl{display:flex;align-items:center;justify-content:flex-end;gap:4px;font-size:.5rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px;}
+.pas3d-live-dot{width:5px;height:5px;border-radius:50%;background:var(--acc);animation:pulse 2s ease-in-out infinite;}
+.pas3d-price{font-size:1.35rem;font-weight:800;letter-spacing:-.04em;color:var(--acc);line-height:1;text-align:right;}
+.pas3d-where{font-size:.52rem;color:var(--ink3);margin-top:3px;max-width:160px;text-align:right;line-height:1.4;}
+.pas3d-bottom{margin-top:auto;display:flex;align-items:flex-end;gap:12px;}
+.pas3d-sp{font-size:1.2rem;font-weight:700;color:#13202e;letter-spacing:-.02em;line-height:1.1;}
+.pas3d-tag{font-size:.6rem;color:var(--ink3);margin-top:2px;}
+.pas3d-div{width:1px;align-self:stretch;background:var(--line);}
+.pas3d-meta{font-size:.58rem;color:#13202e;font-weight:600;line-height:1.7;}
+.pas3d-meta .sup{color:var(--acc);font-weight:700;}
+.pas3d-back-brand{font-size:1.8rem;font-weight:800;letter-spacing:-.03em;color:#13202e;}
+.pas3d-back-brand i{color:var(--acc);font-style:normal;}
+.pas3d-back-sub{font-size:.54rem;color:var(--ink3);letter-spacing:.18em;text-transform:uppercase;margin-top:7px;}
 </style>
 </head>
 <body>
@@ -776,14 +781,19 @@ function build3DPass(){
   for(var j=0;j<ps.length;j++){if(USER_PASSES.indexOf(ps[j][0])>=0)mine.push(ps[j]);}
   if(!mine.length)return'';
   mine.sort(function(a,b){return a[1]-b[1]});
-  var best=mine[0],PASNUM={anwb:'NL‑ANW 8810 7721',eflux:'NL‑EFL 3329 1584',newmotion:'NL‑SHE 1042 2960'};
-  return '<div class="pas3d-wrap"><div class="pas3d" onclick="openDashSheet(\''+s.id+'\')">'
-    +'<div class="pas3d-top"><div class="pas3d-brand">Fair<i>Plug</i></div>'
-    +'<svg class="pas3d-nfc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8.5 15.5a5 5 0 0 1 0-7"/><path d="M5.6 18.4a9 9 0 0 1 0-12.8"/><path d="M11.4 12.6a1 1 0 0 1 0-1.2"/></svg></div>'
-    +'<div class="pas3d-chiprow"><div class="pas3d-chip"></div><span class="pas3d-num">'+(PASNUM[best[0]]||'NL‑FPL 0000 0000')+'</span></div>'
-    +'<div class="pas3d-bottom"><div><div class="pas3d-sub">Beste pas bij deze paal</div><div class="pas3d-name">'+OPS[best[0]].name+'</div></div>'
-    +'<div style="text-align:right"><div class="pas3d-price">'+fmt(best[1])+'</div><div class="pas3d-where">per kWh · '+s.name+' · '+fmtDist(nd)+'</div></div></div>'
-    +'</div></div>';
+  var best=mine[0],wasFlipped=!!document.querySelector('.pas3d-flip.flipped');
+  return '<div class="pas3d-wrap"><div class="pas3d-float"><div class="pas3d-flip'+(wasFlipped?' flipped':'')+'" onclick="this.classList.toggle(\'flipped\')">'
+    +'<div class="pas3d-face front">'
+      +'<div class="pas3d-top"><div class="pas3d-brand">Fair<i>Plug</i></div>'
+      +'<div><div class="pas3d-live-lbl"><span class="pas3d-live-dot"></span>Live · beste pas hier</div>'
+      +'<div class="pas3d-price">'+fmt(best[1])+'<span style="font-size:.55rem;font-weight:500;color:var(--ink3)"> /kWh</span></div>'
+      +'<div class="pas3d-where">'+OPS[best[0]].name+' · '+s.name+' · '+fmtDist(nd)+'</div></div></div>'
+      +'<div class="pas3d-bottom"><div><div class="pas3d-sp">SmartPass</div><div class="pas3d-tag">One pass. Lowest price.</div></div>'
+      +'<div class="pas3d-div"></div>'
+      +'<div class="pas3d-meta">Card ID: FP‑000001<br><span class="sup">fairplug.nl/support</span></div></div>'
+    +'</div>'
+    +'<div class="pas3d-face back"><div class="pas3d-back-brand">Fair<i>Plug</i></div><div class="pas3d-back-sub">Tik om terug te draaien</div></div>'
+    +'</div></div></div>';
 }
 
 /* ═══ PASSEN ═══ */
