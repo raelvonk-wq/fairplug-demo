@@ -284,7 +284,9 @@ body{background:#e0e3e8;display:flex;justify-content:center;min-height:100vh;}
 .pas3d-flip.flipped{transform:rotateY(180deg);}
 .pas3d-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:#fff;border-radius:16px;box-shadow:0 20px 34px -14px rgba(10,22,32,.32),0 6px 14px rgba(10,22,32,.12);overflow:hidden;display:flex;flex-direction:column;padding:15px 16px 14px 26px;}
 .pas3d-face::before{content:'';position:absolute;left:0;top:0;bottom:0;width:10px;background:var(--acc);}
-.pas3d-face.back{transform:rotateY(180deg);align-items:center;justify-content:center;}
+.pas3d-face.back{transform:rotateY(180deg);}
+.pas3d-face.front{align-items:center;justify-content:center;}
+.pas3d-cardid{position:absolute;left:26px;bottom:12px;font-size:.58rem;color:var(--ink3);font-weight:600;}
 .pas3d-brand{font-size:1.08rem;font-weight:800;letter-spacing:-.03em;color:#13202e;}
 .pas3d-brand i{color:var(--acc);font-style:normal;}
 .pas3d-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
@@ -767,6 +769,14 @@ function dismissOnboard(msg){
   var ob=document.getElementById('onboard');ob.classList.add('hide');
   setTimeout(function(){ob.style.display='none';},450);
   if(msg)showToast(msg);
+  schedulePasFlip();
+}
+function schedulePasFlip(){
+  if(window._pfDone)return;window._pfDone=true;
+  setTimeout(function(){
+    var f=document.querySelector('.page.active .pas3d-flip')||document.querySelector('.pas3d-flip');
+    if(f&&!f.classList.contains('flipped'))f.classList.add('flipped');
+  },3500);
 }
 setTimeout(function(){
   var sp=document.getElementById('splash');sp.classList.add('hide');
@@ -784,17 +794,17 @@ function build3DPass(){
   var best=mine[0],wasFlipped=!!document.querySelector('.pas3d-flip.flipped');
   return '<div class="pas3d-wrap"><div class="pas3d-float"><div class="pas3d-flip'+(wasFlipped?' flipped':'')+'" onclick="this.classList.toggle(\'flipped\')">'
     +'<div class="pas3d-face front">'
-      +'<div class="pas3d-top"><div class="pas3d-brand">Fair<i>Plug</i></div>'
-      +'<div class="pas3d-meta" style="text-align:right">Card ID: FP‑000001</div></div>'
-      +'<div class="pas3d-bottom"><div><div class="pas3d-sp">SmartPass</div><div class="pas3d-tag">One pass. Lowest price.</div></div>'
-      +'<div class="pas3d-div"></div>'
-      +'<div class="pas3d-meta"><span class="sup">fairplug.nl/support</span></div></div>'
+      +'<div class="pas3d-back-brand">Fair<i>Plug</i></div>'
+      +'<div class="pas3d-cardid">Card ID: FP‑000001</div>'
     +'</div>'
     +'<div class="pas3d-face back">'
-      +'<div class="pas3d-back-brand">Fair<i>Plug</i></div>'
-      +'<div class="pas3d-live-lbl" style="justify-content:center;margin-top:12px"><span class="pas3d-live-dot"></span>Live · beste pas hier</div>'
-      +'<div class="pas3d-price" style="text-align:center;font-size:1.5rem">'+fmt(best[1])+'<span style="font-size:.55rem;font-weight:500;color:var(--ink3)"> /kWh</span></div>'
-      +'<div class="pas3d-where" style="text-align:center;max-width:200px;margin-top:4px">'+OPS[best[0]].name+' · '+s.name+' · '+fmtDist(nd)+'</div>'
+      +'<div class="pas3d-top"><div class="pas3d-brand">Fair<i>Plug</i></div>'
+      +'<div><div class="pas3d-live-lbl"><span class="pas3d-live-dot"></span>Live · beste pas hier</div>'
+      +'<div class="pas3d-price">'+fmt(best[1])+'<span style="font-size:.55rem;font-weight:500;color:var(--ink3)"> /kWh</span></div>'
+      +'<div class="pas3d-where">'+OPS[best[0]].name+' · '+s.name+' · '+fmtDist(nd)+'</div></div></div>'
+      +'<div class="pas3d-bottom"><div><div class="pas3d-sp">SmartPass</div><div class="pas3d-tag">One pass. Lowest price.</div></div>'
+      +'<div class="pas3d-div"></div>'
+      +'<div class="pas3d-meta">Card ID: FP‑000001<br><span class="sup">fairplug.nl/support</span></div></div>'
     +'</div>'
     +'</div></div></div>';
 }
