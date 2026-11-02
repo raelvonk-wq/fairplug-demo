@@ -785,14 +785,17 @@ function build3DPass(){
   return '<div class="pas3d-wrap"><div class="pas3d-float"><div class="pas3d-flip'+(wasFlipped?' flipped':'')+'" onclick="this.classList.toggle(\'flipped\')">'
     +'<div class="pas3d-face front">'
       +'<div class="pas3d-top"><div class="pas3d-brand">Fair<i>Plug</i></div>'
-      +'<div><div class="pas3d-live-lbl"><span class="pas3d-live-dot"></span>Live · beste pas hier</div>'
-      +'<div class="pas3d-price">'+fmt(best[1])+'<span style="font-size:.55rem;font-weight:500;color:var(--ink3)"> /kWh</span></div>'
-      +'<div class="pas3d-where">'+OPS[best[0]].name+' · '+s.name+' · '+fmtDist(nd)+'</div></div></div>'
+      +'<div class="pas3d-meta" style="text-align:right">Card ID: FP‑000001</div></div>'
       +'<div class="pas3d-bottom"><div><div class="pas3d-sp">SmartPass</div><div class="pas3d-tag">One pass. Lowest price.</div></div>'
       +'<div class="pas3d-div"></div>'
-      +'<div class="pas3d-meta">Card ID: FP‑000001<br><span class="sup">fairplug.nl/support</span></div></div>'
+      +'<div class="pas3d-meta"><span class="sup">fairplug.nl/support</span></div></div>'
     +'</div>'
-    +'<div class="pas3d-face back"><div class="pas3d-back-brand">Fair<i>Plug</i></div><div class="pas3d-back-sub">Tik om terug te draaien</div></div>'
+    +'<div class="pas3d-face back">'
+      +'<div class="pas3d-back-brand">Fair<i>Plug</i></div>'
+      +'<div class="pas3d-live-lbl" style="justify-content:center;margin-top:12px"><span class="pas3d-live-dot"></span>Live · beste pas hier</div>'
+      +'<div class="pas3d-price" style="text-align:center;font-size:1.5rem">'+fmt(best[1])+'<span style="font-size:.55rem;font-weight:500;color:var(--ink3)"> /kWh</span></div>'
+      +'<div class="pas3d-where" style="text-align:center;max-width:200px;margin-top:4px">'+OPS[best[0]].name+' · '+s.name+' · '+fmtDist(nd)+'</div>'
+    +'</div>'
     +'</div></div></div>';
 }
 
