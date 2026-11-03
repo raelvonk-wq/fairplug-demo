@@ -656,25 +656,25 @@ function buildSheetHTML(s,i,showDist){
   var ps=prices[i],cp=ps[0][1],mp=ps[ps.length-1][1],df=+(mp-cp).toFixed(2);
   var dist=haversine(userLat,userLng,s.lat,s.lng),mu='https://www.google.com/maps/dir/?api=1&destination='+s.lat+','+s.lng;
   var ci=calcCharge(s,cp);
-  var h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div style="font-size:.72rem;font-weight:800;color:var(--ink)">Fair<span style="color:var(--acc)">Plug</span></div><div style="font-size:.6rem;color:var(--ink3)">Prijsvergelijker</div></div>';
+  var h='';
   // Station header
-  h+='<div style="background:var(--bg);border-radius:12px;padding:16px 14px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div style="min-width:0"><div class="sh-name-dk" style="font-size:1.18rem;letter-spacing:-.02em">'+s.name+'</div><div class="sh-city" style="font-size:.74rem">'+s.city+(showDist?' \u00b7 '+fmtDist(dist):'')+'</div></div><a href="'+mu+'" target="_blank" style="width:38px;height:38px;border-radius:10px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.2" width="17" height="17"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></a></div>';
-  h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">'+statusBadge(s)+(s.kw>=50?'<span class="badge bb">'+fmtKW(s.kw)+' DC</span>':'<span class="badge bgr">AC '+fmtKW(s.kw)+'</span>')+'</div>';
-  // Stekker info
-  h+='<div class="sh-stekker"><div class="sh-stk-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>'+fmtKW(s.kw)+' '+s.conn+' \u00b7 '+s.nconn+'x</div></div></div>';
+  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px"><div style="min-width:0"><div style="font-size:1.3rem;font-weight:800;letter-spacing:-.025em;color:var(--ink);line-height:1.2">'+s.name+'</div><div style="font-size:.76rem;color:var(--ink3);margin-top:3px">'+s.city+(showDist?' \u00b7 '+fmtDist(dist):'')+'</div></div><a href="'+mu+'" target="_blank" style="width:40px;height:40px;border-radius:12px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.2" width="18" height="18"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></a></div>';
+  h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin:8px 0 16px">'+statusBadge(s)+(s.kw>=50?'<span class="badge bb">'+fmtKW(s.kw)+' DC</span>':'<span class="badge bgr">AC '+fmtKW(s.kw)+'</span>')+'<span class="badge bgr">'+s.conn+' \u00b7 '+s.nconn+'x</span></div>';
   // Start button
   var bo=OPS[ps[0][0]];h+='<a class="start-btn" href="'+(bo?bo.url:'#')+'" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Start laden via '+(bo?bo.name:'')+' \u2014 '+fmt(cp)+'/kWh</a>';
-  // Warning banner
-  if(df>=.10)h+='<div class="sh-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg><div class="sh-banner-txt">Tot <strong>'+fmt(df)+'/kWh</strong> verschil \u2014 bij '+ci.kwh+' kWh scheelt dit <strong>'+fmt(df*ci.kwh)+'</strong>!</div></div>';
   // All providers
-  h+='<div class="sec-lbl" style="margin-bottom:10px">Alle aanbieders</div>';
+  h+='<div class="sec-lbl" style="margin:16px 0 8px">Alle aanbieders</div>';
   for(var j=0;j<ps.length;j++){
     var oid=ps[j][0],price=ps[j][1],op=OPS[oid];if(!op)continue;
-    var d=+(price-cp).toFixed(2),best=j===0,isMine=USER_PASSES.indexOf(oid)>=0;
-    var ml=isMine?'<span class="pr-my-tag">Mijn pas</span>':'';
+    var best=j===0,isMine=USER_PASSES.indexOf(oid)>=0;
     var pc=calcCharge(s,price);
-    h+='<div class="pr'+(best?' pr-best':'')+'"><div class="pr-main"><div class="pr-rk'+(best?' r1':j<4?' r-mid':' r-exp')+'">'+(j+1)+'</div><div class="pr-info"><div class="pr-nm">'+op.name+(best?'<span class="pr-cheap-tag">Goedkoopst</span>':'')+ml+'</div><div class="pr-df'+(best?' ch':'')+'">'+(best?'Beste keuze voor deze paal':'+ '+fmt(d)+' per kWh')+'</div><div class="pr-total">Totaal: <strong>'+fmt(pc.cost)+'</strong> voor '+ci.kwh+' kWh \u00b7 '+pc.time+'</div></div><div class="pr-price-col"><div class="pr-price">'+fmt(price)+'</div><span class="pr-pu">/kWh</span></div></div>';
-    h+='<a class="ref-btn" href="'+op.url+'" target="_blank"><span>Ga naar '+op.name+'</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></a></div>';
+    h+='<a href="'+op.url+'" target="_blank" style="display:flex;align-items:center;gap:11px;padding:12px;background:'+(best?'var(--acc-bg)':'var(--surface)')+';border:1px solid '+(best?'rgba(29,184,126,.3)':'var(--line2)')+';border-radius:12px;margin-bottom:6px;text-decoration:none">'
+      +'<div style="width:24px;height:24px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.64rem;font-weight:700;background:'+(best?'var(--acc)':'var(--bg2)')+';color:'+(best?'#fff':'var(--ink3)')+'">'+(j+1)+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:.84rem;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px">'+op.name+(isMine?'<span style="font-size:.52rem;font-weight:700;color:var(--blue);background:var(--blue-bg);padding:2px 7px;border-radius:99px">Mijn pas</span>':'')+'</div>'
+      +'<div style="font-size:.64rem;color:var(--ink3);margin-top:2px">Totaal '+fmt(pc.cost)+' \u00b7 '+pc.time+'</div></div>'
+      +'<div style="text-align:right;flex-shrink:0"><span style="font-size:.95rem;font-weight:800;color:'+(best?'var(--acc)':'var(--ink)')+'">'+fmt(price)+'</span><span style="font-size:.52rem;color:var(--ink3)"> /kWh</span></div>'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2.2" width="13" height="13" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>'
+    +'</a>';
   }
   h+='<div class="divider"></div>';
   // Vehicle & battery config
