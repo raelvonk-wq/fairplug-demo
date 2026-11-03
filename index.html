@@ -150,7 +150,7 @@ body{background:#e0e3e8;display:flex;justify-content:center;height:100%;overflow
 #top-bar>*{pointer-events:all;}
 .fpill{display:flex;background:var(--surface);border-radius:99px;padding:2px;box-shadow:0 2px 10px rgba(0,0,0,.1);}.fpill button{padding:6px 14px;border:none;border-radius:99px;background:none;font-family:var(--f);font-size:.7rem;font-weight:600;color:var(--ink3);cursor:pointer;}.fpill button.on{background:var(--acc);color:#fff;}
 #banner{position:absolute;top:52px;left:10px;right:10px;z-index:10;background:var(--amber-bg);border:1px solid rgba(232,160,32,.2);border-radius:var(--r);padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:.68rem;color:var(--amber);font-weight:500;cursor:pointer;transition:opacity .2s;}#banner.hidden{display:none;}#banner svg{width:14px;height:14px;flex-shrink:0;color:var(--amber);}
-#fabLoc{position:absolute;bottom:130px;right:12px;z-index:10;width:42px;height:42px;border-radius:50%;background:var(--surface);border:none;box-shadow:0 2px 10px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;}#fabLoc svg{width:18px;height:18px;color:var(--acc);}
+#fabLoc{position:absolute;bottom:92px;right:10px;z-index:10;width:42px;height:42px;border-radius:50%;background:var(--surface);border:none;box-shadow:0 2px 10px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;}#fabLoc svg{width:18px;height:18px;color:var(--acc);}
 #bottom{position:absolute;bottom:0;left:0;right:0;z-index:10;background:var(--surface);border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.08);padding:6px 12px 10px;}
 #bhandle{width:28px;height:3px;background:var(--line);border-radius:2px;margin:0 auto 8px;}
 #brow{display:flex;gap:8px;align-items:center;}
@@ -517,6 +517,10 @@ body{background:#e0e3e8;display:flex;justify-content:center;height:100%;overflow
   <div class="fp-lbl">Snelheid</div><div class="fp-opts"><button class="fp-opt on" data-v="alle">Alle</button><button class="fp-opt" data-v="ac">AC (≤22 kW)</button><button class="fp-opt" data-v="dc">DC (≥50 kW)</button><button class="fp-opt" data-v="hpc">HPC (≥150 kW)</button></div>
   <div class="fp-lbl">Status</div><div class="fp-opts"><button class="fp-opt on" data-v="alle">Alle</button><button class="fp-opt" data-v="vrij">Alleen vrij</button><button class="fp-opt" data-v="bezet">Bezet</button></div>
   <div class="fp-lbl">Aanbieder</div><div class="fp-opts"><button class="fp-opt on" data-v="alle">Alle</button><button class="fp-opt" data-v="tap">Tap Electric</button><button class="fp-opt" data-v="fastned">Fastned</button><button class="fp-opt" data-v="newmotion">Shell Recharge</button><button class="fp-opt" data-v="total">TotalEnergies</button></div>
+  <div class="fp-lbl">Stekker</div><div class="fp-opts"><button class="fp-opt on" data-v="alle">Alle</button><button class="fp-opt" data-v="ccs">CCS</button><button class="fp-opt" data-v="chademo">CHAdeMO</button><button class="fp-opt" data-v="type2">Type 2</button></div>
+  <div class="fp-lbl">Max. prijs</div><div class="fp-opts"><button class="fp-opt on" data-v="alle">Alle</button><button class="fp-opt" data-v="40">&le; &euro; 0,40</button><button class="fp-opt" data-v="50">&le; &euro; 0,50</button><button class="fp-opt" data-v="60">&le; &euro; 0,60</button></div>
+  <div class="fp-lbl">Laadpunten</div><div class="fp-opts"><button class="fp-opt on" data-v="alle">Alle</button><button class="fp-opt" data-v="2">2+</button><button class="fp-opt" data-v="4">4+</button></div>
+  <div class="fp-lbl">Overig</div><div class="fp-opts"><button class="fp-opt" data-v="groen">Groene stroom</button><button class="fp-opt" data-v="247">24/7 open</button><button class="fp-opt" data-v="mijn">Alleen mijn passen</button></div>
   <div class="fp-lbl" style="margin-top:4px;margin-bottom:2px">Opties</div>
   <div class="tog-row"><div><div class="tog-label">24/7 beschikbaar</div><div class="tog-desc">Alleen altijd open palen</div></div><button class="tog on"></button></div>
   <div class="tog-row"><div><div class="tog-label">Groene stroom</div><div class="tog-desc">Alleen duurzame energie</div></div><button class="tog"></button></div>
@@ -714,7 +718,7 @@ document.getElementById('filterPill').addEventListener('click',function(e){var b
 function doFilter(){if(!cluster)return;cluster.clearLayers();mkrs.forEach(function(o){if(curF==='alle'||(curF==='snel'&&STATIONS[o.i].kw>=50))cluster.addLayer(o.m);});}
 function initMap(){
   var el=document.getElementById('map');map=L.map(el,{zoomControl:false}).setView([52.20,5.30],8);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:20}).addTo(map);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap',maxZoom:19}).addTo(map);
   setTimeout(function(){map.invalidateSize()},200);
   cluster=L.markerClusterGroup({maxClusterRadius:60,chunkedLoading:true,iconCreateFunction:function(c){var n=c.getChildCount(),sz=n<20?36:n<100?42:n<500?48:54;return L.divIcon({html:'<div style="width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:#1db87e;color:#fff;font-weight:700;font-size:'+(sz<42?11:10)+'px;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(29,184,126,.35)">'+n.toLocaleString()+'</div>',className:'fp-cluster',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});}});
   var ren=L.canvas({padding:.5}),off=0;
@@ -735,7 +739,7 @@ var obMap=null;
 function initObMap(){
   var el=document.getElementById('obmap');if(!el||obMap)return;
   obMap=L.map(el,{zoomControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false,boxZoom:false,keyboard:false}).setView([userLat+.004,userLng],13);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:20}).addTo(obMap);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap',maxZoom:19}).addTo(obMap);
   var nearby=STATIONS.map(function(s,i){return{s:s,i:i,d:haversine(userLat,userLng,s.lat,s.lng)}}).sort(function(a,b){return a.d-b.d}).slice(0,7);
   var cheapest=nearby.slice().sort(function(a,b){return prices[a.i][0][1]-prices[b.i][0][1]})[0];
   nearby.forEach(function(x){
@@ -809,13 +813,12 @@ function renderPassen(){
     h+='<div class="card"><h3>Geen van je passen geldig hier</h3><p>Bekijk alle aanbieders bij deze paal via het dashboard.</p></div>';
   }
   h+='<div class="pas-add" style="background:var(--surface);border-radius:12px;border:1.6px dashed #c3ccd7;margin-top:2px" onclick="showToast(\'Laadpas toevoegen komt binnenkort\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Laadpas toevoegen</div>';
-  h+='<div class="sec-row" style="margin-top:14px"><span class="sec-lbl">Al mijn passen</span></div>';
-  h+='<div class="pas-card">'
-    +'<div class="pas-row"><div class="pas-dot" style="background:var(--acc)"></div><div class="pas-name">ANWB Energie</div><span class="pas-status" style="background:var(--acc-bg);color:var(--acc)">Actief</span></div>'
-    +'<div class="pas-row"><div class="pas-dot" style="background:var(--acc)"></div><div class="pas-name">E-flux</div><span class="pas-status" style="background:var(--acc-bg);color:var(--acc)">Actief</span></div>'
-    +'<div class="pas-row"><div class="pas-dot" style="background:var(--acc)"></div><div class="pas-name">Shell Recharge</div><span class="pas-status" style="background:var(--acc-bg);color:var(--acc)">Actief</span></div>'
-    +'<div class="pas-row"><div class="pas-dot" style="background:var(--ink3)"></div><div class="pas-name">Vattenfall</div><span class="pas-status" style="background:var(--bg);color:var(--ink3)">Inactief</span></div>'
-    +'</div>';
+  h+='<div class="sec-row" style="margin-top:14px"><span class="sec-lbl">Populaire passen</span><span class="sec-tag">Voeg toe aan je account</span></div>';
+  var pop=[['Vattenfall InCharge','Populair bij thuisladers'],['TotalEnergies','Scherp DC-tarief'],['Fastned Gold','15% korting op snelladen']];
+  h+='<div class="pas-card">';
+  for(var q=0;q<pop.length;q++){h+='<div class="pas-row"><div style="width:30px;height:30px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:var(--ink2);flex-shrink:0">'+pop[q][0].charAt(0)+'</div><div style="flex:1;min-width:0;margin-left:10px"><div class="pas-name">'+pop[q][0]+'</div><div style="font-size:.6rem;color:var(--ink3)">'+pop[q][1]+'</div></div><button onclick="showToast(\''+pop[q][0]+' toevoegen komt binnenkort\')" style="width:28px;height:28px;border-radius:8px;border:none;background:var(--acc-bg);color:var(--acc);font-size:1rem;font-weight:700;cursor:pointer;font-family:var(--f)">+</button></div>';}
+  h+='</div>';
+  h+='<div class="card" style="padding:13px 14px;margin-top:10px;display:flex;gap:10px;align-items:flex-start"><div style="width:30px;height:30px;border-radius:9px;background:var(--amber-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" width="15" height="15"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.4 1 2.3h6c0-.9.4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg></div><div><div style="font-size:.76rem;font-weight:700;color:var(--ink)">Slim: laat FairPlug kiezen</div><div style="font-size:.66rem;color:var(--ink3);line-height:1.5;margin-top:2px">Bij elke paal rekenen we al je passen door en zie je direct de goedkoopste. Jij hoeft alleen te prikken.</div></div></div>';
   el.innerHTML=h;
 }
 
