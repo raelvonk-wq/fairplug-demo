@@ -20,14 +20,14 @@
 <style>
 :root{--f:'DM Sans',system-ui,sans-serif;--ink:#0d0f12;--ink2:#3d4350;--ink3:#8590a2;--line:#e9ecf0;--line2:#f2f4f7;--surface:#fff;--bg:#f3f5f8;--bg2:#edf0f4;--acc:#1db87e;--acc-dk:#17a370;--acc-bg:#edfaf4;--amber:#e8a020;--amber-bg:#fef8ec;--red:#e03535;--red-bg:#fef1f1;--blue:#2a7ef8;--blue-bg:#eef4ff;--purple:#7c3aed;--purple-bg:#f3f0ff;--nav:54px;--hdr:48px;--r:10px;--rl:14px;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;font-family:var(--f);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;}
-body{background:#e0e3e8;display:flex;justify-content:center;min-height:100vh;}
+html,body{height:100%;font-family:var(--f);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;}
+body{background:#e0e3e8;display:flex;justify-content:center;height:100%;overflow:hidden;}
 #phone{width:430px;max-width:100vw;height:100dvh;background:var(--bg);display:flex;flex-direction:column;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 24px 64px rgba(0,0,0,.18);overflow:hidden;position:relative;}
-@media(max-width:430px){body{background:var(--bg);}#phone{box-shadow:none;}}
+@media(max-width:430px){body{background:var(--surface);}#phone{box-shadow:none;position:fixed;inset:0;width:100%;height:100%;}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* HEADER */
-#hdr{height:var(--hdr);flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 16px;justify-content:space-between;z-index:50;}
+#hdr{height:calc(var(--hdr) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding-left:16px;padding-right:16px;justify-content:space-between;z-index:50;}
 .hdr-brand{font-size:1.22rem;font-weight:800;letter-spacing:-.03em;color:var(--ink);}.hdr-brand i{color:var(--acc);font-style:normal;}
 .hdr-r{display:flex;align-items:center;gap:8px;}
 .live-tag{display:flex;align-items:center;gap:4px;font-size:.59rem;font-weight:600;color:var(--acc);letter-spacing:.06em;text-transform:uppercase;background:var(--acc-bg);padding:3px 8px;border-radius:99px;border:1px solid rgba(29,184,126,.2);}
@@ -826,6 +826,7 @@ function renderPassen(){
   }else{
     h+='<div class="card"><h3>Geen van je passen geldig hier</h3><p>Bekijk alle aanbieders bij deze paal via het dashboard.</p></div>';
   }
+  h+='<div style="background:var(--surface);border-radius:var(--rl);margin:14px 0 12px;border:1.5px solid rgba(29,184,126,.4);box-shadow:0 6px 20px rgba(29,184,126,.16);overflow:hidden">'+buildCompareCard()+'</div>';
   h+='<div class="pas-add" style="background:var(--surface);border-radius:12px;border:1.6px dashed #c3ccd7;margin-top:2px" onclick="showToast(\'Laadpas toevoegen komt binnenkort\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Laadpas toevoegen</div>';
   h+='<div class="sec-row" style="margin-top:14px"><span class="sec-lbl">Al mijn passen</span></div>';
   h+='<div class="pas-card">'
