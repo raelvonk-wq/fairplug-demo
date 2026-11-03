@@ -716,8 +716,6 @@ function refreshSheet(sid){
 }
 function openDashSheet(id){var i=SMAP[id];if(i===undefined)return;var s=STATIONS[i];
   document.getElementById('sbc').innerHTML=buildSheetHTML(s,i,true);closeAll();sheetEl.classList.add('open');ovlEl.classList.add('v');sheetEl.scrollTop=0;}
-function searchPole(){var q=document.getElementById('pole-inp').value.trim().toLowerCase();if(q.length<2){showToast('Typ minimaal 2 tekens');return;}for(var i=0;i<N;i++){if(STATIONS[i].name.toLowerCase().indexOf(q)>=0){openDashSheet(STATIONS[i].id);return;}}showToast('Geen paal gevonden');}
-document.getElementById('pole-inp').addEventListener('keydown',function(e){if(e.key==='Enter')searchPole();});
 
 /* ═══ KAART ═══ */
 var map=null,cluster=null,mkrs=[],curF='alle';
