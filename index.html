@@ -462,29 +462,11 @@ body{background:#e0e3e8;display:flex;justify-content:center;height:100%;overflow
 
 <!-- ═══ PAGE: PROFIEL ═══ -->
 <div id="page-profiel" class="page" style="overflow-y:auto">
-  <div class="prof-hero"><div class="prof-avatar"><img src="https://cdn.shopify.com/s/files/1/0933/6232/3831/files/UnFilter_6.jpg?v=1773765491" alt="FairPlug" style="width:100%;height:100%;border-radius:22px;object-fit:cover;"></div><div class="prof-name">Fair<i>Plug</i></div><div class="prof-tag">Jouw passen, altijd de slimste keuze.</div></div>
+  <div class="prof-hero"><div class="prof-avatar"><img src="icons/icon-512-v3.png" alt="FairPlug" style="width:100%;height:100%;border-radius:22px;object-fit:cover;"></div><div class="prof-name">Fair<i>Plug</i></div><div class="prof-tag">Jouw passen, altijd de slimste keuze.</div></div>
   <div class="prof-stats"><div class="ps"><div class="ps-v">3</div><div class="ps-l">Mijn passen</div></div><div class="ps"><div class="ps-v">€ 0</div><div class="ps-l">Bespaard</div></div><div class="ps"><div class="ps-v">0</div><div class="ps-l">Sessies</div></div></div>
   <div class="pad" style="flex:1;overflow-y:auto">
     <div class="sec-row"><span class="sec-lbl">Account</span></div>
     <div class="login-card"><h3>Log in om je passen te beheren</h3><p>Voeg je laadpassen toe en ontvang meldingen als jouw goedkoopste pas nog goedkoper wordt.</p><div class="login-btns"><button class="login-btn login-btn-primary" onclick="showToast('Inloggen komt binnenkort')">Inloggen</button><button class="login-btn login-btn-secondary" onclick="showToast('Registreren komt binnenkort')">Registreren</button></div></div>
-    <div class="sec-row"><span class="sec-lbl">Mijn laadpassen</span></div>
-    <div class="card" style="padding:14px;margin-bottom:5px"><h3 style="font-size:.82rem">Voeg je passen toe, wij vergelijken</h3><p style="font-size:.68rem;color:var(--ink3);line-height:1.55;margin-bottom:0">Heb je meerdere laadpassen? Voeg ze toe en FairPlug toont bij elke laadpaal welke van jouw passen het goedkoopst is.</p></div>
-    <div class="pas-card">
-      <div class="pas-row"><div class="pas-dot" style="background:var(--acc)"></div><div class="pas-name">ANWB Energie</div><span class="pas-status" style="background:var(--acc-bg);color:var(--acc)">Actief</span></div>
-      <div class="pas-row"><div class="pas-dot" style="background:var(--acc)"></div><div class="pas-name">E-flux</div><span class="pas-status" style="background:var(--acc-bg);color:var(--acc)">Actief</span></div>
-      <div class="pas-row"><div class="pas-dot" style="background:var(--acc)"></div><div class="pas-name">Shell Recharge</div><span class="pas-status" style="background:var(--acc-bg);color:var(--acc)">Actief</span></div>
-      <div class="pas-row"><div class="pas-dot" style="background:var(--ink3)"></div><div class="pas-name">Vattenfall</div><span class="pas-status" style="background:var(--bg);color:var(--ink3)">Inactief</span></div>
-      <div class="pas-add" onclick="showToast('Laadpas toevoegen komt binnenkort')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Laadpas toevoegen</div>
-    </div>
-    <div class="card" style="padding:0;margin-bottom:5px;overflow:hidden">
-      <div style="padding:14px 14px 10px;display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:.82rem;font-weight:700;color:var(--ink)">Jumbo Hoogeveen</div><div style="font-size:.6rem;color:var(--ink3);margin-top:1px">50 kW DC snellader</div></div><span class="badge bg" style="font-size:.56rem">Live</span></div>
-      <div style="padding:0 14px 12px">
-        <div style="display:flex;align-items:center;padding:10px 12px;background:var(--acc-bg);border:1px solid rgba(29,184,126,.15);border-radius:10px;margin-bottom:6px"><div style="width:22px;height:22px;border-radius:6px;background:var(--acc);color:#fff;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px">1</div><span style="flex:1;font-size:.8rem;font-weight:700;color:var(--ink)">ANWB Energie</span><span style="font-size:.95rem;font-weight:800;color:var(--acc)">€ 0,34</span><span style="font-size:.5rem;color:var(--ink3);margin-left:2px">/kWh</span></div>
-        <div style="display:flex;align-items:center;padding:9px 12px;background:var(--bg);border-radius:10px;margin-bottom:4px"><div style="width:22px;height:22px;border-radius:6px;background:var(--bg2);color:var(--ink3);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px">2</div><span style="flex:1;font-size:.78rem;font-weight:600;color:var(--ink2)">E-flux</span><span style="font-size:.88rem;font-weight:700;color:var(--ink2)">€ 0,39</span><span style="font-size:.5rem;color:var(--ink3);margin-left:2px">/kWh</span></div>
-        <div style="display:flex;align-items:center;padding:9px 12px;background:var(--bg);border-radius:10px"><div style="width:22px;height:22px;border-radius:6px;background:var(--bg2);color:var(--ink3);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px">3</div><span style="flex:1;font-size:.78rem;font-weight:600;color:var(--ink2)">Shell Recharge</span><span style="font-size:.88rem;font-weight:700;color:var(--ink2)">€ 0,48</span><span style="font-size:.5rem;color:var(--ink3);margin-left:2px">/kWh</span></div>
-      </div>
-      <div style="padding:11px 14px;background:var(--acc);display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" width="13" height="13"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span style="font-size:.72rem;font-weight:700;color:#fff">Gebruik ANWB Energie — bespaar € 7,00 bij 50 kWh</span></div>
-    </div>
     <div class="sec-row"><span class="sec-lbl">Binnenkort</span></div>
     <div style="background:linear-gradient(145deg,var(--acc),var(--acc-dk));border-radius:var(--rl);padding:16px;margin-bottom:5px;position:relative;overflow:hidden"><div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06)"></div><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div><div style="font-size:.88rem;font-weight:700;color:#fff">FairPlug Pas</div><div style="font-size:.58rem;color:rgba(255,255,255,.65)">Eén pas, altijd goedkoopst, overal</div></div></div><div style="font-size:.68rem;color:rgba(255,255,255,.8);line-height:1.55;margin-bottom:10px">Straks hoef je niet meer zelf te kiezen. Eén FairPlug pas, en wij betalen automatisch via de goedkoopste aanbieder.</div><div style="display:inline-flex;align-items:center;gap:5px;font-size:.64rem;font-weight:700;color:#fff;background:rgba(255,255,255,.18);padding:5px 12px;border-radius:99px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Houd me op de hoogte</div></div>
     <div class="sec-row"><span class="sec-lbl">Instellingen</span></div>
@@ -661,14 +643,16 @@ function buildSheetHTML(s,i,showDist){
   var stDot=s.status==='VRIJ'?'#7df0bf':s.status==='BEZET'?'#ffd27d':'#ff9d9d';
   h+='<div style="background:linear-gradient(135deg,var(--acc),var(--acc-dk));border-radius:14px;padding:16px 14px;margin-bottom:14px">'
     +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div style="min-width:0"><div style="font-size:1.22rem;font-weight:800;letter-spacing:-.02em;color:#fff;line-height:1.25">'+s.name+'</div><div style="font-size:.74rem;color:rgba(255,255,255,.85);margin-top:3px">'+s.city+(showDist?' \u00b7 '+fmtDist(dist):'')+'</div></div>'
-    +'<a href="'+mu+'" target="_blank" style="flex-shrink:0;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:3px"><svg viewBox="0 0 24 24" fill="#e03535" stroke="#e03535" stroke-width="1" width="26" height="26"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3" fill="#fff" stroke="none"/></svg></a></div>'
+    +'<a href="'+mu+'" target="_blank" style="flex-shrink:0;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:3px"><svg viewBox="0 0 24 24" fill="none" stroke="#e03535" stroke-width="2.2" width="25" height="25"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></a></div>'
     +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:10px">'
       +'<span style="display:inline-flex;align-items:center;gap:5px;font-size:.6rem;font-weight:700;color:#fff;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:99px"><span style="width:6px;height:6px;border-radius:50%;background:'+stDot+'"></span>'+s.status+'</span>'
       +'<span style="font-size:.6rem;font-weight:700;color:#fff;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:99px">'+(s.kw>=50?fmtKW(s.kw)+' DC':'AC '+fmtKW(s.kw))+'</span>'
       +'<span style="font-size:.6rem;font-weight:700;color:#fff;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:99px">'+s.conn+' \u00b7 '+s.nconn+'x</span>'
-    +'</div></div>';
-  // Start button
-  var bo=OPS[ps[0][0]];h+='<a class="start-btn" href="'+(bo?bo.url:'#')+'" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Start laden via '+(bo?bo.name:'')+' \u2014 '+fmt(cp)+'/kWh</a>';
+    +'</div>';
+  // Start button (in dezelfde groene balk)
+  var bo=OPS[ps[0][0]];
+  h+='<a href="'+(bo?bo.url:'#')+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:7px;background:#fff;color:var(--acc-dk);font-size:.82rem;font-weight:800;border-radius:11px;padding:13px;margin-top:13px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--acc-dk)" stroke-width="2.4" width="15" height="15"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Start laden via '+(bo?bo.name:'')+' \u2014 '+fmt(cp)+'/kWh</a>';
+  h+='</div>';
   // All providers
   h+='<div class="sec-lbl" style="margin:16px 0 8px">Alle aanbieders</div>';
   for(var j=0;j<ps.length;j++){
@@ -814,7 +798,7 @@ function renderPassen(){
   for(var j=0;j<ps.length;j++){if(USER_PASSES.indexOf(ps[j][0])>=0)mine.push(ps[j]);}
   mine.sort(function(a,b){return a[1]-b[1]});
   var h=build3DPass();
-  h+='<div style="background:var(--surface);border-radius:var(--rl);margin-bottom:14px;border:1.5px solid rgba(29,184,126,.4);box-shadow:0 6px 20px rgba(29,184,126,.16);overflow:hidden">'+buildCompareCard()+'</div>';
+  h+='<div class="card" style="padding:14px;margin-bottom:12px"><h3 style="font-size:.82rem">Voeg je passen toe, wij vergelijken</h3><p style="font-size:.68rem;color:var(--ink3);line-height:1.55;margin-bottom:0">Heb je meerdere laadpassen? Voeg ze toe en FairPlug toont bij elke laadpaal welke van jouw passen het goedkoopst is.</p></div>';
   h+='<div class="sec-row"><span class="sec-lbl">Mijn laadpassen</span><span class="sec-tag">'+mine.length+' passen geldig bij deze paal</span></div>';
   if(mine.length){
     for(var k=0;k<mine.length;k++){
