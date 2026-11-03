@@ -369,7 +369,9 @@ body{background:#e0e3e8;display:flex;justify-content:center;min-height:100vh;}
     <div class="eng-pill" id="eng-timer">Actief</div>
   </div>
   <div class="pad" id="dash-scroll">
-    <div id="dash-pas"></div>
+    <div class="sec-row"><span class="sec-lbl">Top 5 in jouw buurt</span><span class="sec-tag" id="top5-city">Hoogeveen</span></div>
+    <div id="dash-top5"></div>
+    <div style="height:14px"></div>
     <div id="dash-compare" style="background:var(--surface);border-radius:var(--rl);margin-bottom:12px;border:1.5px solid rgba(29,184,126,.4);box-shadow:0 6px 20px rgba(29,184,126,.16);overflow:hidden"></div>
     <div class="sec-row"><span class="sec-lbl">Zoek jouw passen bij een paal</span></div>
     <div style="background:var(--surface);border-radius:var(--rl);margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:10px 12px;display:flex;gap:8px;align-items:center">
@@ -379,9 +381,6 @@ body{background:#e0e3e8;display:flex;justify-content:center;min-height:100vh;}
       </div>
       <button onclick="searchPole()" style="height:34px;padding:0 10px;border-radius:8px;background:var(--acc);border:none;color:#fff;font-family:var(--f);font-size:.66rem;font-weight:700;cursor:pointer">Zoek</button>
     </div>
-    <div class="sec-row"><span class="sec-lbl">Top 5 in jouw buurt</span><span class="sec-tag" id="top5-city">Hoogeveen</span></div>
-    <div id="dash-top5"></div>
-    <div style="height:14px"></div>
     <div class="sec-row"><span class="sec-lbl">Alle palen — Top 50</span><span class="sec-tag">Heel Nederland</span></div>
     <div id="dash-all"></div>
   </div>
@@ -661,7 +660,7 @@ function buildCompareCard(){var nearest=null,nd=999999;for(var i=0;i<N;i++){var 
   for(var k=0;k<mp.length;k++){var p=mp[k],op=OPS[p[0]];if(k===0)h+='<div style="display:flex;align-items:center;padding:10px 12px;background:var(--acc-bg);border:1px solid rgba(29,184,126,.15);border-radius:10px;margin-bottom:6px"><div style="width:22px;height:22px;border-radius:6px;background:var(--acc);color:#fff;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px">1</div><span style="flex:1;font-size:.8rem;font-weight:700;color:var(--ink)">'+op.name+'</span><span style="font-size:.95rem;font-weight:800;color:var(--acc)">'+fmt(p[1])+'</span><span style="font-size:.5rem;color:var(--ink3);margin-left:2px">/kWh</span></div>';
   else h+='<div style="display:flex;align-items:center;padding:9px 12px;background:var(--bg);border-radius:10px;margin-bottom:4px"><div style="width:22px;height:22px;border-radius:6px;background:var(--bg2);color:var(--ink3);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px">'+(k+1)+'</div><span style="flex:1;font-size:.78rem;font-weight:600;color:var(--ink2)">'+op.name+'</span><span style="font-size:.88rem;font-weight:700;color:var(--ink2)">'+fmt(p[1])+'</span><span style="font-size:.5rem;color:var(--ink3);margin-left:2px">/kWh</span></div>';}
   h+='</div>';if(diff>=.04)h+='<div style="display:flex;border-top:1px solid var(--line2)"><div style="flex:1;padding:11px 14px;background:var(--acc);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer" onclick="openDashSheet(\''+s.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" width="13" height="13"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span style="font-size:.7rem;font-weight:700;color:#fff">'+OPS[best[0]].name+' \u2014 bespaar '+fmt(s50)+'</span></div><a href="https://www.google.com/maps/dir/?api=1&destination='+s.lat+','+s.lng+'" target="_blank" style="padding:11px 14px;background:var(--bg);display:flex;align-items:center;gap:5px;text-decoration:none;border-left:1px solid var(--line2)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink2)" stroke-width="2" width="13" height="13"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span style="font-size:.66rem;font-weight:600;color:var(--ink2)">Route</span></a></div>';return h;}
-function renderDash(){var dp=document.getElementById('dash-pas');if(dp)dp.innerHTML=build3DPass();var cmp=document.getElementById('dash-compare');if(cmp)cmp.innerHTML=buildCompareCard();var nearby=STATIONS.map(function(s,i){return{s:s,i:i,p:prices[i][0][1],dist:haversine(userLat,userLng,s.lat,s.lng)}}).filter(function(x){return x.dist<=2}).sort(function(a,b){return a.p-b.p}).slice(0,5);var t5=document.getElementById('dash-top5');if(t5)t5.innerHTML=nearby.map(function(x,k){return buildCard(x.s,x.i,k+1,false)}).join('');var sorted=STATIONS.map(function(s,i){return{s:s,i:i,p:prices[i][0][1]}}).sort(function(a,b){return a.p-b.p}).slice(0,50);var al=document.getElementById('dash-all');if(al)al.innerHTML=sorted.map(function(x,k){return buildCard(x.s,x.i,k+1,true)}).join('');}
+function renderDash(){var cmp=document.getElementById('dash-compare');if(cmp)cmp.innerHTML=buildCompareCard();var nearby=STATIONS.map(function(s,i){return{s:s,i:i,p:prices[i][0][1],dist:haversine(userLat,userLng,s.lat,s.lng)}}).filter(function(x){return x.dist<=2}).sort(function(a,b){return a.p-b.p}).slice(0,5);var t5=document.getElementById('dash-top5');if(t5)t5.innerHTML=nearby.map(function(x,k){return buildCard(x.s,x.i,k+1,false)}).join('');var sorted=STATIONS.map(function(s,i){return{s:s,i:i,p:prices[i][0][1]}}).sort(function(a,b){return a.p-b.p}).slice(0,50);var al=document.getElementById('dash-all');if(al)al.innerHTML=sorted.map(function(x,k){return buildCard(x.s,x.i,k+1,true)}).join('');}
 function buildSheetHTML(s,i,showDist){
   var ps=prices[i],cp=ps[0][1],mp=ps[ps.length-1][1],df=+(mp-cp).toFixed(2);
   var dist=haversine(userLat,userLng,s.lat,s.lng),mu='https://www.google.com/maps/dir/?api=1&destination='+s.lat+','+s.lng;
