@@ -56,7 +56,7 @@ body{background:#e0e3e8;display:flex;justify-content:center;height:100%;overflow
 #ovl{position:absolute;inset:0;background:rgba(13,15,18,.4);z-index:190;opacity:0;pointer-events:none;transition:opacity .26s;}#ovl.v{opacity:1;pointer-events:all;}
 #sheet{position:absolute;bottom:0;left:0;right:0;z-index:200;background:var(--surface);border-radius:18px 18px 0 0;border-top:1px solid var(--line);transform:translateY(100%);transition:transform .32s cubic-bezier(.22,.68,0,1.08);max-height:88%;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.1);}
 #sheet.open{transform:translateY(0);}
-#shd{width:32px;height:3px;background:var(--line);border-radius:2px;margin:10px auto 0;}#sbc{padding:14px 16px 72px;}
+#shd{width:32px;height:3px;background:var(--line);border-radius:2px;margin:10px auto 0;}#sbc{padding:14px 16px calc(18px + env(safe-area-inset-bottom));}
 #menu{position:absolute;top:0;right:0;bottom:0;width:280px;z-index:810;background:var(--surface);transform:translateX(100%);transition:transform .3s cubic-bezier(.22,.68,0,1.05);box-shadow:-4px 0 24px rgba(0,0,0,.08);overflow-y:auto;padding:20px 18px 40px;}
 #menu.open{transform:translateX(0);}
 .m-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);margin:16px 2px 7px;}
@@ -662,7 +662,7 @@ function buildSheetHTML(s,i,showDist){
   var stDot=s.status==='VRIJ'?'#7df0bf':s.status==='BEZET'?'#ffd27d':'#ff9d9d';
   h+='<div style="background:linear-gradient(135deg,var(--acc),var(--acc-dk));border-radius:14px;padding:16px 14px;margin-bottom:14px">'
     +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div style="min-width:0"><div style="font-size:1.22rem;font-weight:800;letter-spacing:-.02em;color:#fff;line-height:1.25">'+s.name+'</div><div style="font-size:.74rem;color:rgba(255,255,255,.85);margin-top:3px">'+s.city+(showDist?' \u00b7 '+fmtDist(dist):'')+'</div></div>'
-    +'<a href="'+mu+'" target="_blank" style="flex-shrink:0;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:3px"><svg viewBox="0 0 24 24" fill="none" stroke="#e03535" stroke-width="2.2" width="25" height="25"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></a></div>'
+    +'<a href="'+mu+'" target="_blank" style="width:36px;height:36px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none"><svg viewBox="0 0 24 24" fill="#e03535" width="17" height="17"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg></a></div>'
     +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:10px">'
       +'<span style="display:inline-flex;align-items:center;gap:5px;font-size:.6rem;font-weight:700;color:#fff;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:99px"><span style="width:6px;height:6px;border-radius:50%;background:'+stDot+'"></span>'+s.status+'</span>'
       +'<span style="font-size:.6rem;font-weight:700;color:#fff;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:99px">'+(s.kw>=50?fmtKW(s.kw)+' DC':'AC '+fmtKW(s.kw))+'</span>'
@@ -775,7 +775,6 @@ function dismissOnboard(msg){
 function schedulePasFlip(){
   if(window._pfDone)return;window._pfDone=true;
   window._pfTimer=setInterval(function(){
-    if(window._pfManual){clearInterval(window._pfTimer);return;}
     var f=document.querySelector('.page.active .pas3d-flip')||document.querySelector('.pas3d-flip');
     if(f)f.classList.toggle('flipped');
   },4000);
@@ -794,7 +793,7 @@ function build3DPass(){
   if(!mine.length)return'';
   mine.sort(function(a,b){return a[1]-b[1]});
   var best=mine[0],wasFlipped=!!document.querySelector('.pas3d-flip.flipped');
-  return '<div class="pas3d-wrap"><div class="pas3d-float"><div class="pas3d-flip'+(wasFlipped?' flipped':'')+'" onclick="window._pfManual=true;this.classList.toggle(\'flipped\')">'
+  return '<div class="pas3d-wrap"><div class="pas3d-float"><div class="pas3d-flip'+(wasFlipped?' flipped':'')+'" onclick="this.classList.toggle(\'flipped\')">'
     +'<div class="pas3d-face front">'
       +'<div class="pas3d-back-brand">Fair<i>Plug</i></div>'
       +'<div class="pas3d-cardid">Card ID: FP‑000001</div>'
@@ -833,7 +832,6 @@ function renderPassen(){
   h+='<div class="pas-card">';
   for(var q=0;q<pop.length;q++){h+='<div class="pas-row"><div style="width:30px;height:30px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:var(--ink2);flex-shrink:0">'+pop[q][0].charAt(0)+'</div><div style="flex:1;min-width:0;margin-left:10px"><div class="pas-name">'+pop[q][0]+'</div><div style="font-size:.6rem;color:var(--ink3)">'+pop[q][1]+'</div></div><button onclick="showToast(\''+pop[q][0]+' toevoegen komt binnenkort\')" style="width:28px;height:28px;border-radius:8px;border:none;background:var(--acc-bg);color:var(--acc);font-size:1rem;font-weight:700;cursor:pointer;font-family:var(--f)">+</button></div>';}
   h+='</div>';
-  h+='<div class="card" style="padding:13px 14px;margin-top:10px;display:flex;gap:10px;align-items:flex-start"><div style="width:30px;height:30px;border-radius:9px;background:var(--amber-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" width="15" height="15"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.4 1 2.3h6c0-.9.4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg></div><div><div style="font-size:.76rem;font-weight:700;color:var(--ink)">Slim: laat FairPlug kiezen</div><div style="font-size:.66rem;color:var(--ink3);line-height:1.5;margin-top:2px">Bij elke paal rekenen we al je passen door en zie je direct de goedkoopste. Jij hoeft alleen te prikken.</div></div></div>';
   el.innerHTML=h;
 }
 
